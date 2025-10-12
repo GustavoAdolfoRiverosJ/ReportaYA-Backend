@@ -1,0 +1,256 @@
+### ============================================
+### Sistema ReportaYA - API REST Tests
+### Usar con REST Client extension de VS Code
+### ============================================
+
+@baseUrl = http://localhost:8080/api
+@contentType = application/json
+
+### ============================================
+### CIUDADANOS - Endpoints
+### ============================================
+
+### 1. Crear un Ciudadano
+POST {{baseUrl}}/ciudadanos
+Content-Type: {{contentType}}
+
+{
+    "nombres": "Juan Carlos",
+    "apellidos": "Pérez García",
+    "dni": "12345678",
+    "telefono": "987654321",
+    "correo": "juan.perez@email.com",
+    "usuario": "jperez",
+    "contrasena": "pedro"
+}
+
+### 2. Listar Todos los Ciudadanos
+GET {{baseUrl}}/ciudadanos
+
+### 3. Obtener Ciudadano por ID (cambiar el ID según necesites)
+GET {{baseUrl}}/ciudadanos/1
+
+### 4. Buscar Ciudadano por DNI
+GET {{baseUrl}}/ciudadanos/dni/12345678
+
+### 5. Actualizar Ciudadano
+PUT {{baseUrl}}/ciudadanos/1
+Content-Type: {{contentType}}
+
+{
+    "nombres": "Juan Carlos",
+    "apellidos": "Pérez García",
+    "dni": "12345678",
+    "telefono": "999888777",
+    "correo": "juan.perez.nuevo@email.com",
+    "usuario": "jperez",
+    "contrasena": "newpassword456"
+}
+
+### 6. Eliminar Ciudadano (comentado para evitar eliminaciones accidentales)
+# DELETE {{baseUrl}}/ciudadanos/1
+
+
+### ============================================
+### REPORTES - Endpoints
+### ============================================
+
+### 7. Crear un Reporte (requiere cuentaId de un ciudadano existente)
+POST {{baseUrl}}/reportes
+Content-Type: {{contentType}}
+
+{
+    "titulo": "Fuga de agua en Av. Principal",
+    "descripcion": "Hay una gran fuga de agua en la esquina de la Av. Principal con Jr. Los Olivos. El agua está inundando la calle.",
+    "cuentaId": 1,
+    "prioridad": "ALTA"
+}
+
+### 8. Crear otro Reporte con prioridad MEDIA
+POST {{baseUrl}}/reportes
+Content-Type: {{contentType}}
+
+{
+    "titulo": "Bache en Jr. Los Sauces",
+    "descripcion": "Hay un bache grande en la pista que puede causar accidentes.",
+    "cuentaId": 1,
+    "prioridad": "MEDIA"
+}
+
+### 9. Crear Reporte con prioridad BAJA
+POST {{baseUrl}}/reportes
+Content-Type: {{contentType}}
+
+{
+    "titulo": "Alumbrado público apagado",
+    "descripcion": "El poste de luz en la esquina no enciende desde hace 3 días.",
+    "cuentaId": 1,
+    "prioridad": "BAJA"
+}
+
+### 10. Listar Todos los Reportes
+GET {{baseUrl}}/reportes
+
+### 11. Obtener Reporte por ID
+GET {{baseUrl}}/reportes/1
+
+### 12. Obtener Reportes de un Ciudadano específico
+GET {{baseUrl}}/reportes/cuenta/1
+
+### 13. Obtener Reportes por Estado - PENDIENTE
+GET {{baseUrl}}/reportes/estado/PENDIENTE
+
+### 14. Obtener Reportes por Estado - REVISION
+GET {{baseUrl}}/reportes/estado/REVISION
+
+### 15. Obtener Reportes por Estado - PROCESO
+GET {{baseUrl}}/reportes/estado/PROCESO
+
+### 16. Obtener Reportes por Estado - FINALIZADO
+GET {{baseUrl}}/reportes/estado/FINALIZADO
+
+### 17. Obtener Reportes por Estado - RECHAZADO
+GET {{baseUrl}}/reportes/estado/RECHAZADO
+
+### 18. Actualizar Reporte Completo
+PUT {{baseUrl}}/reportes/1
+Content-Type: {{contentType}}
+
+{
+    "titulo": "Fuga de agua en Av. Principal (ACTUALIZADO)",
+    "descripcion": "La fuga de agua ha empeorado. Se requiere atención urgente inmediata.",
+    "prioridad": "ALTA"
+}
+
+### 19. Cambiar Estado de Reporte a REVISION
+PATCH {{baseUrl}}/reportes/1/estado?nuevoEstado=REVISION
+
+### 20. Cambiar Estado de Reporte a PROCESO
+PATCH {{baseUrl}}/reportes/1/estado?nuevoEstado=PROCESO
+
+### 21. Cambiar Estado de Reporte a FINALIZADO
+PATCH {{baseUrl}}/reportes/1/estado?nuevoEstado=FINALIZADO
+
+### 22. Cambiar Estado de Reporte a RECHAZADO
+PATCH {{baseUrl}}/reportes/1/estado?nuevoEstado=RECHAZADO
+
+### 23. Cambiar Prioridad de Reporte a ALTA
+PATCH {{baseUrl}}/reportes/1/prioridad?nuevaPrioridad=ALTA
+
+### 24. Cambiar Prioridad de Reporte a MEDIA
+PATCH {{baseUrl}}/reportes/1/prioridad?nuevaPrioridad=MEDIA
+
+### 25. Cambiar Prioridad de Reporte a BAJA
+PATCH {{baseUrl}}/reportes/1/prioridad?nuevaPrioridad=BAJA
+
+### 26. Eliminar Reporte (comentado para evitar eliminaciones accidentales)
+# DELETE {{baseUrl}}/reportes/1
+
+
+### ============================================
+### FLUJO COMPLETO DE PRUEBA
+### ============================================
+
+### PASO 1: Crear un Ciudadano
+POST {{baseUrl}}/ciudadanos
+Content-Type: {{contentType}}
+
+{
+    "nombres": "María",
+    "apellidos": "González López",
+    "dni": "87654321",
+    "telefono": "912345678",
+    "correo": "maria.gonzalez@email.com",
+    "usuario": "mgonzalez",
+    "contrasena": "maria123"
+}
+
+### PASO 2: Crear un Reporte para ese Ciudadano (usar el ID del paso anterior)
+POST {{baseUrl}}/reportes
+Content-Type: {{contentType}}
+
+{
+    "titulo": "Basura acumulada en esquina",
+    "descripcion": "Hay basura acumulada que no se ha recogido en 5 días.",
+    "cuentaId": 2,
+    "prioridad": "MEDIA"
+}
+
+### PASO 3: Ver todos los reportes del ciudadano
+GET {{baseUrl}}/reportes/cuenta/2
+
+### PASO 4: Cambiar estado del reporte a REVISION
+PATCH {{baseUrl}}/reportes/2/estado?nuevoEstado=REVISION
+
+### PASO 5: Cambiar estado del reporte a PROCESO
+PATCH {{baseUrl}}/reportes/2/estado?nuevoEstado=PROCESO
+
+### PASO 6: Cambiar prioridad del reporte a ALTA
+PATCH {{baseUrl}}/reportes/2/prioridad?nuevaPrioridad=ALTA
+
+### PASO 7: Cambiar estado del reporte a FINALIZADO
+PATCH {{baseUrl}}/reportes/2/estado?nuevoEstado=FINALIZADO
+
+### PASO 8: Verificar el reporte finalizado
+GET {{baseUrl}}/reportes/2
+
+
+### ============================================
+### PRUEBAS DE VALIDACIÓN Y ERRORES
+### ============================================
+
+### Buscar Ciudadano que no existe
+GET {{baseUrl}}/ciudadanos/9999
+
+### Buscar Reporte que no existe
+GET {{baseUrl}}/reportes/9999
+
+### Crear Reporte sin cuentaId (debería fallar)
+POST {{baseUrl}}/reportes
+Content-Type: {{contentType}}
+
+{
+    "titulo": "Reporte sin ciudadano",
+    "descripcion": "Este reporte no tiene cuentaId",
+    "prioridad": "ALTA"
+}
+
+### Crear Reporte con cuentaId inexistente (debería fallar)
+POST {{baseUrl}}/reportes
+Content-Type: {{contentType}}
+
+{
+    "titulo": "Reporte con ciudadano inexistente",
+    "descripcion": "Este reporte tiene un cuentaId que no existe",
+    "cuentaId": 9999,
+    "prioridad": "ALTA"
+}
+
+
+### ============================================
+### VALORES PERMITIDOS
+### ============================================
+
+# Estados de Reporte:
+# - PENDIENTE (por defecto al crear)
+# - REVISION
+# - PROCESO
+# - FINALIZADO
+# - RECHAZADO
+
+# Prioridades:
+# - BAJA
+# - MEDIA (por defecto al crear)
+# - ALTA
+
+
+### ============================================
+### NOTAS DE USO
+### ============================================
+
+# 1. Asegúrate de que el servidor esté corriendo en http://localhost:8080
+# 2. Instala la extensión "REST Client" en VS Code
+# 3. Haz clic en "Send Request" sobre cada petición
+# 4. Los IDs (1, 2, etc.) son ejemplos, ajústalos según tus datos
+# 5. Las peticiones DELETE están comentadas para evitar eliminaciones accidentales
+# 6. Ejecuta las peticiones en orden para seguir el flujo completo
