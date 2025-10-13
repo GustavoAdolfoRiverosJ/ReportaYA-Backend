@@ -1,0 +1,51 @@
+@baseUrl = http://localhost:8080/api
+@contentType = application/json
+
+### ============================================
+### TRIAJE / ASIGNACIÓN - Endpoints (HU-10)
+### Flujo: poner reporte en REVISION -> asignar prioridad + técnico (operador realiza la acción)
+### ============================================
+
+# Nota: Si no tienes endpoints para crear Operador/Tecnico, usa IDs existentes en tu BD.
+# Ajusta los valores de operadorId y tecnicoId según tus datos.
+
+### A. Poner reporte en REVISION (precondición HU)
+PATCH {{baseUrl}}/reportes/2/estado?nuevoEstado=REVISION
+
+### B. Asignar reporte a un Técnico (triaje) - caso feliz
+POST {{baseUrl}}/reportes/2/triaje?operadorId=2
+Content-Type: {{contentType}}
+
+{
+    "prioridad": "BAJA",
+    "tecnicoId": 5
+}
+
+### C. Verificar reporte actualizado
+GET {{baseUrl}}/reportes/2
+
+### D. Reasignación: asignar a otro técnico (cerrará la asignación previa)
+POST {{baseUrl}}/reportes/2/triaje?operadorId=2
+Content-Type: {{contentType}}
+
+{
+    "prioridad": "MEDIA",
+    "tecnicoId": 6
+}
+
+### E. Caso de error: intentar asignar cuando el reporte NO está en REVISION
+# Primero poner el estado a PENDIENTE
+PATCH {{baseUrl}}/reportes/3/estado?nuevoEstado=PENDIENTE
+
+# Intentar triaje (debe fallar según reglas)
+POST {{baseUrl}}/reportes/3/triaje?operadorId=2
+Content-Type: {{contentType}}
+
+{
+    "prioridad": "ALTA",
+    "tecnicoId": 5
+}
+
+### ============================================
+### FIN TRIAJE / ASIGNACIÓN
+### ============================================

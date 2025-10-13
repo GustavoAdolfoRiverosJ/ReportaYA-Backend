@@ -7,12 +7,23 @@ import java.util.List;
 
 public interface IReporteService {
     ReporteDTO crearReporte(ReporteDTO reporteDTO);
+
     ReporteDTO obtenerReportePorId(Long id);
+
     List<ReporteDTO> obtenerTodosReportes();
+
     List<ReporteDTO> obtenerReportesPorEstado(EstadoReporte estado);
+
     List<ReporteDTO> obtenerReportesPorCuenta(Long cuentaId);
+
     ReporteDTO actualizarReporte(Long id, ReporteDTO reporteDTO);
+
     ReporteDTO cambiarEstadoReporte(Long id, EstadoReporte nuevoEstado);
+
     ReporteDTO cambiarPrioridadReporte(Long id, Prioridad nuevaPrioridad);
+
     void eliminarReporte(Long id);
+
+    ReporteDTO triajeYAsignar(Long reporteId, Long operadorId,
+            com.ulima.incidenciaurbana.dto.TriajeRequest triajeRequest);
 }
