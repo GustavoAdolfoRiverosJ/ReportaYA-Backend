@@ -33,18 +33,10 @@ PATCH {{baseUrl}}/reportes/{{reportId}}/estado?nuevoEstado=REVISION
 ### D. (si usaste SQL) Inserta operador y técnico en la BD y anota sus ids
 ### -- después de ejecutar las SQL anteriores en la DB, fija las variables
 
-### E. Ejecutar triaje y asignación (operadorId pasado como query, prioridad y tecnicoId en body)
-POST {{baseUrl}}/reportes/{{reportId}}/triaje?operadorId={{operatorId}}
-Content-Type: {{contentType}}
-
-{
-	"prioridad": "ALTA",
-	"tecnicoId": {{tecnicoId}}
-}
+### E. Ejecutar asignación (operadorId tecnicoId pasado como query,  en body)
 @operatorId = 1
 @tecnicoId = 2
-
-
+POST {{baseUrl}}/reportes/{{reportId}}/triaje?operadorId={{operatorId}}&tecnicoId={{tecnicoId}}
 
 ### F. Verificar asignaciones y estado del reporte
 GET {{baseUrl}}/reportes/{{reportId}}

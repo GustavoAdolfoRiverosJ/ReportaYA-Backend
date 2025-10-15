@@ -59,7 +59,6 @@ CREATE TABLE IF NOT EXISTS asignaciones (
   operador_id BIGINT NOT NULL,
   tecnico_id BIGINT,
   fecha_asignacion TIMESTAMP WITHOUT TIME ZONE,
-  fecha_aceptacion TIMESTAMP WITHOUT TIME ZONE,
   fecha_cierre TIMESTAMP WITHOUT TIME ZONE,
   CONSTRAINT fk_asignaciones_reporte FOREIGN KEY (reporte_id) REFERENCES reportes (id) ON DELETE CASCADE,
   CONSTRAINT fk_asignaciones_operador FOREIGN KEY (operador_id) REFERENCES operadores_municipales (id) ON DELETE RESTRICT,
@@ -70,9 +69,17 @@ CREATE TABLE IF NOT EXISTS asignaciones (
 -- (evita dos filas con fecha_cierre IS NULL para el mismo reporte)
 CREATE UNIQUE INDEX IF NOT EXISTS ux_asignaciones_reporte_abierta ON asignaciones (reporte_id) WHERE fecha_cierre IS NULL;
 
--- 7) Índices frecuentes
+-- 7) Índices frecuentes first-come wins y consultas comunes
+-- (mejoran rendimiento en búsquedas y joins)
 CREATE INDEX IF NOT EXISTS idx_reportes_cuenta_id ON reportes (cuenta_id);
 CREATE INDEX IF NOT EXISTS idx_asignaciones_reporte_id ON asignaciones (reporte_id);
 CREATE INDEX IF NOT EXISTS idx_asignaciones_tecnico_id ON asignaciones (tecnico_id);
 
--- Fin del schema.sql
+
+DROP TABLE IF EXISTS asignaciones CASCADE;
+DROP TABLE IF EXISTS reportes CASCADE;
+DROP TABLE IF EXISTS operadores_municipales CASCADE;
+DROP TABLE IF EXISTS tecnicos CASCADE;
+DROP TABLE IF EXISTS ciudadanos CASCADE;
+DROP TABLE IF EXISTS cuentas CASCADE;
+DROP TABLE IF EXISTS personas CASCADE;

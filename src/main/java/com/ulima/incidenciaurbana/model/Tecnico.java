@@ -15,16 +15,11 @@ public class Tecnico extends Cuenta {
         super(usuario, contrasenaHash, persona);
     }
 
-    public void aceptarAsignacion(Asignacion asignacion) {
-        if (asignacion != null) {
-            asignacion.setFechaAceptacion(java.time.LocalDateTime.now());
-        }
-    }
-
-    public void completarAsignacion(Asignacion asignacion) {
-        if (asignacion != null) {
-            asignacion.setFechaCierre(java.time.LocalDateTime.now());
-        }
-    }
-
+    /*
+     * public void completarAsignacion(Asignacion asignacion) {
+     * if (asignacion != null) {
+     * asignacion.setFechaCierre(java.time.LocalDateTime.now());
+     * }
+     * }
+     */
 }

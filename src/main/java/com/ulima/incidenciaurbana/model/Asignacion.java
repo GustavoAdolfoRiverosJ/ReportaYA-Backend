@@ -26,9 +26,6 @@ public class Asignacion {
     @Column(name = "fecha_asignacion")
     private LocalDateTime fechaAsignacion;
 
-    @Column(name = "fecha_aceptacion")
-    private LocalDateTime fechaAceptacion;
-
     @Column(name = "fecha_cierre")
     private LocalDateTime fechaCierre;
 
@@ -82,14 +79,6 @@ public class Asignacion {
 
     public void setFechaAsignacion(LocalDateTime fechaAsignacion) {
         this.fechaAsignacion = fechaAsignacion;
-    }
-
-    public LocalDateTime getFechaAceptacion() {
-        return fechaAceptacion;
-    }
-
-    public void setFechaAceptacion(LocalDateTime fechaAceptacion) {
-        this.fechaAceptacion = fechaAceptacion;
     }
 
     public LocalDateTime getFechaCierre() {

@@ -8,7 +8,6 @@ import com.ulima.incidenciaurbana.model.Reporte;
 import com.ulima.incidenciaurbana.model.Tecnico;
 import com.ulima.incidenciaurbana.model.OperadorMunicipal;
 import com.ulima.incidenciaurbana.model.Asignacion;
-import com.ulima.incidenciaurbana.dto.TriajeRequest;
 import com.ulima.incidenciaurbana.repository.CuentaRepository;
 import com.ulima.incidenciaurbana.repository.AsignacionRepository;
 import com.ulima.incidenciaurbana.repository.ReporteRepository;
@@ -148,25 +147,25 @@ public class ReporteServiceImpl implements IReporteService {
     }
 
     @Override
-    public ReporteDTO triajeYAsignar(Long reporteId, Long operadorId, TriajeRequest triajeRequest) {
+    public ReporteDTO asignarTecnicoReporte(Long reporteId, Long operadorId, Long tecnicoId) {
         // Validar reporte
         Reporte reporte = reporteRepository.findById(reporteId)
                 .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + reporteId));
 
-        // Validar estado APROBADO (mapeado a REVISION en el enum existente)
+        // Validar reporte en REVISION
         if (reporte.getEstado() != EstadoReporte.REVISION) {
-            throw new RuntimeException("Reporte no está en estado APROBADO (se requiere estado REVISION)");
+            throw new RuntimeException("Reporte no está en estado REVISION (se requiere REVISION para triaje)");
         }
 
-        // Validar prioridad
-        if (triajeRequest.getPrioridad() == null) {
-            throw new RuntimeException("Prioridad es obligatoria");
+        // Validar tecnicoId
+        if (tecnicoId == null) {
+            throw new RuntimeException("tecnicoId es obligatorio");
         }
 
         // Buscar tecnico
-        Cuenta tecnicoCuenta = cuentaRepository.findById(triajeRequest.getTecnicoId())
+        Cuenta tecnicoCuenta = cuentaRepository.findById(tecnicoId)
                 .orElseThrow(
-                        () -> new RuntimeException("Tecnico no encontrado con id: " + triajeRequest.getTecnicoId()));
+                        () -> new RuntimeException("Tecnico no encontrado con id: " + tecnicoId));
 
         if (!(tecnicoCuenta instanceof Tecnico)) {
             throw new RuntimeException("El usuario especificado no es un técnico");
@@ -180,18 +179,7 @@ public class ReporteServiceImpl implements IReporteService {
             asignacionRepository.save(prev);
         });
 
-        // Crear nueva asignacion
-        OperadorMunicipal operador = null;
-        if (operadorId != null) {
-            Cuenta operadorCuenta = cuentaRepository.findById(operadorId)
-                    .orElseThrow(() -> new RuntimeException("Operador no encontrado con id: " + operadorId));
-            if (!(operadorCuenta instanceof OperadorMunicipal)) {
-                throw new RuntimeException("El usuario especificado no es un operador municipal");
-            }
-            operador = (OperadorMunicipal) operadorCuenta;
-        }
-
-        // operador es obligatorio para la asignación
+        // Resolver y validar operador (obligatorio)
         if (operadorId == null) {
             throw new RuntimeException("Operador es obligatorio para la asignación");
         }
@@ -201,14 +189,14 @@ public class ReporteServiceImpl implements IReporteService {
         if (!(operadorCuenta instanceof OperadorMunicipal)) {
             throw new RuntimeException("El usuario especificado no es un operador municipal");
         }
+
         OperadorMunicipal operadorFinal = (OperadorMunicipal) operadorCuenta;
 
         Asignacion asignacion = new Asignacion(reporte, operadorFinal, tecnico);
         asignacion = asignacionRepository.save(asignacion);
 
-        // Actualizar prioridad y estado
-        reporte.setPrioridad(triajeRequest.getPrioridad());
-        reporte.setEstado(com.ulima.incidenciaurbana.model.EstadoReporte.PROCESO);
+        // Actualizar estado a PROCESO
+        reporte.setEstado(EstadoReporte.PROCESO);
         reporte.agregarAsignacion(asignacion);
         reporte = reporteRepository.save(reporte);
 

@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.ulima.incidenciaurbana.dto.TriajeRequest;
 
 import java.util.List;
 
@@ -109,12 +108,12 @@ public class ReporteController {
     }
 
     @PostMapping("/{id}/triaje")
-    public ResponseEntity<ReporteDTO> triajeYAsignar(
+    public ResponseEntity<ReporteDTO> asignarTecnicoReporte(
             @PathVariable Long id,
-            @RequestBody TriajeRequest triajeRequest,
-            @RequestParam(required = false) Long operadorId) {
+            @RequestParam(required = false) Long operadorId,
+            @RequestParam Long tecnicoId) {
         try {
-            ReporteDTO reporteActualizado = reporteService.triajeYAsignar(id, operadorId, triajeRequest);
+            ReporteDTO reporteActualizado = reporteService.asignarTecnicoReporte(id, operadorId, tecnicoId);
             return new ResponseEntity<>(reporteActualizado, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);

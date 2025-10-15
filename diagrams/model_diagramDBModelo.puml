@@ -63,7 +63,6 @@ entity "asignaciones" as asignaciones {
 	operador_id : bigint <<FK operadores_municipales.id>>
 	tecnico_id : bigint <<FK tecnicos.id>>
 	fecha_asignacion : timestamp
-	fecha_aceptacion : timestamp
 	fecha_cierre : timestamp
 }
 

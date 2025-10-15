@@ -28,23 +28,23 @@ Content-Type: {{contentType}}
 GET {{baseUrl}}/ciudadanos
 
 ### 3. Obtener Ciudadano por ID (cambiar el ID según necesites)
-GET {{baseUrl}}/ciudadanos/1
+GET {{baseUrl}}/ciudadanos/3
 
 ### 4. Buscar Ciudadano por DNI
-GET {{baseUrl}}/ciudadanos/dni/12345678
+GET {{baseUrl}}/ciudadanos/dni/70011223
 
 ### 5. Actualizar Ciudadano
-PUT {{baseUrl}}/ciudadanos/1
+PUT {{baseUrl}}/ciudadanos/4
 Content-Type: {{contentType}}
 
 {
-    "nombres": "Juan Carlos",
-    "apellidos": "Pérez García",
-    "dni": "12345678",
-    "telefono": "999888777",
-    "correo": "juan.perez.nuevo@email.com",
-    "usuario": "jperez",
-    "contrasena": "newpassword456"
+    "nombres": "J",
+    "apellidos": "Péía",
+    "dni": "72345679",
+    "telefono": "99900000",
+    "correo": "juan.e.nuevo@email.com",
+    "usuario": "jz",
+    "contrasena": "password456"
 }
 
 ### 6. Eliminar Ciudadano (comentado para evitar eliminaciones accidentales)
@@ -177,7 +177,7 @@ Content-Type: {{contentType}}
 }
 
 ### PASO 3: Ver todos los reportes del ciudadano
-GET {{baseUrl}}/reportes/cuenta/2
+GET {{baseUrl}}/reportes/cuenta/3
 
 ### PASO 4: Cambiar estado del reporte a REVISION
 PATCH {{baseUrl}}/reportes/2/estado?nuevoEstado=REVISION

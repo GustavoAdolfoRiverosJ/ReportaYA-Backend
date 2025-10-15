@@ -15,16 +15,17 @@ public class OperadorMunicipal extends Cuenta {
         super(usuario, contrasenaHash, persona);
     }
 
-    // Operaciones de dominio del operador municipal
-    public void asignarPrioridad(Reporte reporte, Prioridad prioridad) {
-        if (reporte != null && prioridad != null) {
-            reporte.setPrioridad(prioridad);
-        }
-    }
-
-    public Asignacion asignarTecnico(Reporte reporte, Tecnico tecnico) {
-        Asignacion asignacion = new Asignacion(reporte, this, tecnico);
-        return asignacion;
-    }
-
+    /**
+     * Operaciones de dominio del operador municipal
+     * public void asignarPrioridad(Reporte reporte, Prioridad prioridad) {
+     * if (reporte != null && prioridad != null) {
+     * reporte.setPrioridad(prioridad);
+     * }
+     * }
+     * 
+     * public Asignacion asignarTecnico(Reporte reporte, Tecnico tecnico) {
+     * Asignacion asignacion = new Asignacion(reporte, this, tecnico);
+     * return asignacion;
+     * }
+     **/
 }
