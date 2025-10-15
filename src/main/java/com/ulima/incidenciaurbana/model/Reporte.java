@@ -35,6 +35,10 @@ public class Reporte {
     @Column(name = "fecha_actualizacion")
     private LocalDateTime fechaActualizacion;
     
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "ubicacion_id", referencedColumnName = "id", nullable = false)
+    private Ubicacion ubicacion;
+    
     // Constructors
     public Reporte() {
         this.estado = EstadoReporte.PENDIENTE;
@@ -129,6 +133,14 @@ public class Reporte {
     
     public void setFechaActualizacion(LocalDateTime fechaActualizacion) {
         this.fechaActualizacion = fechaActualizacion;
+    }
+    
+    public Ubicacion getUbicacion() {
+        return ubicacion;
+    }
+    
+    public void setUbicacion(Ubicacion ubicacion) {
+        this.ubicacion = ubicacion;
     }
     
     @Override

@@ -1,12 +1,15 @@
 package com.ulima.incidenciaurbana.service.impl;
 
 import com.ulima.incidenciaurbana.dto.ReporteDTO;
+import com.ulima.incidenciaurbana.dto.UbicacionDTO;
 import com.ulima.incidenciaurbana.model.Cuenta;
 import com.ulima.incidenciaurbana.model.EstadoReporte;
 import com.ulima.incidenciaurbana.model.Prioridad;
 import com.ulima.incidenciaurbana.model.Reporte;
+import com.ulima.incidenciaurbana.model.Ubicacion;
 import com.ulima.incidenciaurbana.repository.CuentaRepository;
 import com.ulima.incidenciaurbana.repository.ReporteRepository;
+import com.ulima.incidenciaurbana.repository.UbicacionRepository;
 import com.ulima.incidenciaurbana.service.IReporteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,15 +24,27 @@ public class ReporteServiceImpl implements IReporteService {
     
     private final ReporteRepository reporteRepository;
     private final CuentaRepository cuentaRepository;
+    private final UbicacionRepository ubicacionRepository;
     
     @Autowired
-    public ReporteServiceImpl(ReporteRepository reporteRepository, CuentaRepository cuentaRepository) {
+    public ReporteServiceImpl(ReporteRepository reporteRepository, CuentaRepository cuentaRepository, UbicacionRepository ubicacionRepository) {
         this.reporteRepository = reporteRepository;
         this.cuentaRepository = cuentaRepository;
+        this.ubicacionRepository = ubicacionRepository;
     }
     
     @Override
     public ReporteDTO crearReporte(ReporteDTO reporteDTO) {
+        // Validar que la ubicación sea obligatoria
+        if (reporteDTO.getUbicacion() == null) {
+            throw new RuntimeException("La ubicación es obligatoria para crear un reporte");
+        }
+        
+        // Validar que la ubicación tenga latitud y longitud
+        if (reporteDTO.getUbicacion().getLatitud() == null || reporteDTO.getUbicacion().getLongitud() == null) {
+            throw new RuntimeException("La latitud y longitud son obligatorias en la ubicación");
+        }
+        
         Cuenta cuenta = cuentaRepository.findById(reporteDTO.getCuentaId())
             .orElseThrow(() -> new RuntimeException("Cuenta no encontrada con id: " + reporteDTO.getCuentaId()));
         
@@ -42,6 +57,11 @@ public class ReporteServiceImpl implements IReporteService {
         if (reporteDTO.getPrioridad() != null) {
             reporte.setPrioridad(reporteDTO.getPrioridad());
         }
+        
+        // Crear y asociar ubicación (ahora es obligatoria)
+        Ubicacion ubicacion = convertirDTOAUbicacion(reporteDTO.getUbicacion());
+        ubicacion = ubicacionRepository.save(ubicacion);
+        reporte.setUbicacion(ubicacion);
         
         cuenta.crearReporte(reporte);
         reporte = reporteRepository.save(reporte);
@@ -92,6 +112,23 @@ public class ReporteServiceImpl implements IReporteService {
             reporte.setPrioridad(reporteDTO.getPrioridad());
         }
         
+        // La ubicación es obligatoria, debe estar presente
+        if (reporteDTO.getUbicacion() == null) {
+            throw new RuntimeException("La ubicación es obligatoria. No se puede actualizar un reporte sin ubicación");
+        }
+        
+        // Validar que la ubicación tenga latitud y longitud
+        if (reporteDTO.getUbicacion().getLatitud() == null || reporteDTO.getUbicacion().getLongitud() == null) {
+            throw new RuntimeException("La latitud y longitud son obligatorias en la ubicación");
+        }
+        
+        // Actualizar ubicación existente
+        Ubicacion ubicacion = reporte.getUbicacion();
+        ubicacion.setLatitud(reporteDTO.getUbicacion().getLatitud());
+        ubicacion.setLongitud(reporteDTO.getUbicacion().getLongitud());
+        ubicacion.setDireccion(reporteDTO.getUbicacion().getDireccion());
+        ubicacionRepository.save(ubicacion);
+        
         reporte = reporteRepository.save(reporte);
         return convertirADTO(reporte);
     }
@@ -138,6 +175,30 @@ public class ReporteServiceImpl implements IReporteService {
         dto.setFechaCreacion(reporte.getFechaCreacion());
         dto.setFechaActualizacion(reporte.getFechaActualizacion());
         
+        // Convertir ubicación si existe
+        if (reporte.getUbicacion() != null) {
+            dto.setUbicacion(convertirUbicacionADTO(reporte.getUbicacion()));
+        }
+        
         return dto;
+    }
+    
+    private UbicacionDTO convertirUbicacionADTO(Ubicacion ubicacion) {
+        return new UbicacionDTO(
+            ubicacion.getId(),
+            ubicacion.getLatitud(),
+            ubicacion.getLongitud(),
+            ubicacion.getDireccion(),
+            ubicacion.getFechaRegistro()
+        );
+    }
+    
+    private Ubicacion convertirDTOAUbicacion(UbicacionDTO dto) {
+        Ubicacion ubicacion = new Ubicacion(
+            dto.getLatitud(),
+            dto.getLongitud(),
+            dto.getDireccion()
+        );
+        return ubicacion;
     }
 }

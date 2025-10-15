@@ -14,6 +14,7 @@ public class ReporteDTO {
     private EstadoReporte estado;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
+    private UbicacionDTO ubicacion;
     
     // Constructors
     public ReporteDTO() {
@@ -100,5 +101,13 @@ public class ReporteDTO {
     
     public void setFechaActualizacion(LocalDateTime fechaActualizacion) {
         this.fechaActualizacion = fechaActualizacion;
+    }
+    
+    public UbicacionDTO getUbicacion() {
+        return ubicacion;
+    }
+    
+    public void setUbicacion(UbicacionDTO ubicacion) {
+        this.ubicacion = ubicacion;
     }
 }
