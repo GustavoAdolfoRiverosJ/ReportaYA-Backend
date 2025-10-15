@@ -1,0 +1,46 @@
+@baseUrl = http://localhost:8080/api
+@contentType = application/json
+
+
+### ============================================
+### ASIGNACIÓN - Endpoints (HU-10)
+### ============================================
+
+### A. Necesitas tener Extencion Rest Cliente, crear la BD, TABLAS Y HABER EJECUTADO llenar-TABLAS.sql
+
+### En resource revisar tu usuario y contraseña de tu DB: spring.datasource.password=tu-contraseña-superusuario
+
+### Ejecutar el Servidor: ./mvnw spring-boot:run
+
+### B. Crear un reporte por el Ciudadano id=3 "ci_carlos"
+POST {{baseUrl}}/reportes
+Content-Type: {{contentType}}
+
+{
+	"titulo": "Bache en Av. Principal",
+	"descripcion": "Un bache grande que representa peligro",
+	"cuentaId": 3
+}
+
+### Verificar reporte creado -> anotar reportId
+GET {{baseUrl}}/reportes
+
+### C. Cambiar estado del reporte a REVISION (precondición para triaje)
+PATCH {{baseUrl}}/reportes/{{reportId}}/estado?nuevoEstado=REVISION
+
+@reportId = 1
+
+### D. (si usaste SQL) Inserta operador y técnico en la BD y anota sus ids
+### -- después de ejecutar las SQL anteriores en la DB, fija las variables
+
+### E. Ejecutar asignación (operadorId tecnicoId pasado como query,  en body)
+@operatorId = 1
+@tecnicoId = 2
+POST {{baseUrl}}/reportes/{{reportId}}/triaje?operadorId={{operatorId}}&tecnicoId={{tecnicoId}}
+
+### F. Verificar asignaciones y estado del reporte
+GET {{baseUrl}}/reportes/{{reportId}}
+
+### ============================================
+### FIN ASIGNACIÓN
+### ============================================
