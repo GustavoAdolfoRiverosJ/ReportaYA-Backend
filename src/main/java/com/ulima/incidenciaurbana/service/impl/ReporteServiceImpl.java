@@ -7,11 +7,7 @@ import com.ulima.incidenciaurbana.model.EstadoReporte;
 import com.ulima.incidenciaurbana.model.Prioridad;
 import com.ulima.incidenciaurbana.model.Reporte;
 import com.ulima.incidenciaurbana.model.Ubicacion;
-import com.ulima.incidenciaurbana.model.Tecnico;
-import com.ulima.incidenciaurbana.model.OperadorMunicipal;
-import com.ulima.incidenciaurbana.model.Asignacion;
 import com.ulima.incidenciaurbana.repository.CuentaRepository;
-import com.ulima.incidenciaurbana.repository.AsignacionRepository;
 import com.ulima.incidenciaurbana.repository.ReporteRepository;
 import com.ulima.incidenciaurbana.repository.UbicacionRepository;
 import com.ulima.incidenciaurbana.service.IReporteService;
@@ -21,6 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @Service
 @Transactional
@@ -29,15 +28,14 @@ public class ReporteServiceImpl implements IReporteService {
     private final ReporteRepository reporteRepository;
     private final CuentaRepository cuentaRepository;
     private final UbicacionRepository ubicacionRepository;
-    private final AsignacionRepository asignacionRepository;
+    
+    private static final int PAGE_SIZE = 10;
 
     @Autowired
-    public ReporteServiceImpl(ReporteRepository reporteRepository, CuentaRepository cuentaRepository, UbicacionRepository ubicacionRepository,
-            AsignacionRepository asignacionRepository) {
+    public ReporteServiceImpl(ReporteRepository reporteRepository, CuentaRepository cuentaRepository, UbicacionRepository ubicacionRepository) {
         this.reporteRepository = reporteRepository;
         this.cuentaRepository = cuentaRepository;
         this.ubicacionRepository = ubicacionRepository;
-        this.asignacionRepository = asignacionRepository;
     }
 
     @Override
@@ -74,36 +72,22 @@ public class ReporteServiceImpl implements IReporteService {
         return convertirADTO(reporte);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public ReporteDTO obtenerReportePorId(Long id) {
-        Reporte reporte = reporteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + id));
-        return convertirADTO(reporte);
-    }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReporteDTO> obtenerTodosReportes() {
-        return reporteRepository.findAll().stream()
-                .map(this::convertirADTO)
-                .collect(Collectors.toList());
+    public Page<ReporteDTO> obtenerTodosReportes(int page) {
+        int p = Math.max(0, page);
+    return reporteRepository.findAll(PageRequest.of(p, PAGE_SIZE, Sort.by("fechaCreacion").descending()))
+        .map(this::convertirADTO);
     }
+
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReporteDTO> obtenerReportesPorEstado(EstadoReporte estado) {
-        return reporteRepository.findByEstado(estado).stream()
-                .map(this::convertirADTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ReporteDTO> obtenerReportesPorCuenta(Long cuentaId) {
-        return reporteRepository.findByCuentaId(cuentaId).stream()
-                .map(this::convertirADTO)
-                .collect(Collectors.toList());
+    public Page<ReporteDTO> obtenerReportesPorCuenta(Long cuentaId, int page) {
+        int p = Math.max(0, page);
+    return reporteRepository.findByCuentaId(cuentaId, PageRequest.of(p, PAGE_SIZE, Sort.by("fechaCreacion").descending()))
+        .map(this::convertirADTO);
     }
 
     @Override
@@ -167,6 +151,8 @@ public class ReporteServiceImpl implements IReporteService {
         reporteRepository.deleteById(id);
     }
 
+    // Operator-specific paginated view removed; operators use obtenerTodosReportes(page)
+
     private ReporteDTO convertirADTO(Reporte reporte) {
         ReporteDTO dto = new ReporteDTO(
                 reporte.getId(),
@@ -205,62 +191,5 @@ public class ReporteServiceImpl implements IReporteService {
             dto.getDireccion()
         );
         return ubicacion;
-    }
-
-    @Override
-    public ReporteDTO asignarTecnicoReporte(Long reporteId, Long operadorId, Long tecnicoId) {
-        // Validar reporte
-        Reporte reporte = reporteRepository.findById(reporteId)
-                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + reporteId));
-
-        // Validar reporte en REVISION
-        if (reporte.getEstado() != EstadoReporte.REVISION) {
-            throw new RuntimeException("Reporte no está en estado REVISION (se requiere REVISION para triaje)");
-        }
-
-        // Validar tecnicoId
-        if (tecnicoId == null) {
-            throw new RuntimeException("tecnicoId es obligatorio");
-        }
-
-        // Buscar tecnico
-        Cuenta tecnicoCuenta = cuentaRepository.findById(tecnicoId)
-                .orElseThrow(
-                        () -> new RuntimeException("Tecnico no encontrado con id: " + tecnicoId));
-
-        if (!(tecnicoCuenta instanceof Tecnico)) {
-            throw new RuntimeException("El usuario especificado no es un técnico");
-        }
-
-        Tecnico tecnico = (Tecnico) tecnicoCuenta;
-
-        // Cerrar asignacion previa si existe
-        asignacionRepository.findByReporteIdAndFechaCierreIsNull(reporteId).ifPresent(prev -> {
-            prev.setFechaCierre(java.time.LocalDateTime.now());
-            asignacionRepository.save(prev);
-        });
-
-        // Resolver y validar operador (obligatorio)
-        if (operadorId == null) {
-            throw new RuntimeException("Operador es obligatorio para la asignación");
-        }
-
-        Cuenta operadorCuenta = cuentaRepository.findById(operadorId)
-                .orElseThrow(() -> new RuntimeException("Operador no encontrado con id: " + operadorId));
-        if (!(operadorCuenta instanceof OperadorMunicipal)) {
-            throw new RuntimeException("El usuario especificado no es un operador municipal");
-        }
-
-        OperadorMunicipal operadorFinal = (OperadorMunicipal) operadorCuenta;
-
-        Asignacion asignacion = new Asignacion(reporte, operadorFinal, tecnico);
-        asignacion = asignacionRepository.save(asignacion);
-
-        // Actualizar estado a PROCESO
-        reporte.setEstado(EstadoReporte.PROCESO);
-        reporte.agregarAsignacion(asignacion);
-        reporte = reporteRepository.save(reporte);
-
-        return convertirADTO(reporte);
     }
 }

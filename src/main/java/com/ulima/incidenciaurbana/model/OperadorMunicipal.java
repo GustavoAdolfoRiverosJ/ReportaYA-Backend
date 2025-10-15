@@ -15,17 +15,22 @@ public class OperadorMunicipal extends Cuenta {
         super(usuario, contrasenaHash, persona);
     }
 
-    /**
-     * Operaciones de dominio del operador municipal
-     * public void asignarPrioridad(Reporte reporte, Prioridad prioridad) {
-     * if (reporte != null && prioridad != null) {
-     * reporte.setPrioridad(prioridad);
-     * }
-     * }
-     * 
-     * public Asignacion asignarTecnico(Reporte reporte, Tecnico tecnico) {
-     * Asignacion asignacion = new Asignacion(reporte, this, tecnico);
-     * return asignacion;
-     * }
-     **/
+    public void asignarPrioridad(Reporte reporte, Prioridad prioridad) {
+        if (reporte != null && prioridad != null) {
+            reporte.setPrioridad(prioridad);
+        }
+    }
+
+    public Asignacion asignarTecnico(Reporte reporte, Tecnico tecnico) {
+        if (reporte == null) {
+            throw new IllegalArgumentException("El reporte no puede ser nulo");
+        }
+        if (tecnico == null) {
+            throw new IllegalArgumentException("El técnico no puede ser nulo");
+        }
+        Asignacion asignacion = new Asignacion(reporte, this, tecnico);
+        return asignacion;
+    }
+
+    // OperadorMunicipal delega a los servicios para operaciones de lectura paginada.
 }

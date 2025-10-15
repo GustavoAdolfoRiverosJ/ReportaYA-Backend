@@ -1,0 +1,111 @@
+@baseUrl = http://localhost:8080/api
+@contentType = application/json
+
+### ============================================
+### FLUJO COMPLETO: Crear cuenta, crear reporte, triaje (asignación)
+### Usar con la extensión REST Client (VS Code)
+### ============================================
+
+# NOTA: Este archivo prueba el flujo completo y usa variables en la cabecera.
+# - Ejecuta cada petición en orden
+# - Copia los valores "id" de las respuestas y actualiza las variables en la cabecera
+#   (ciudadanoId, tecnicoId, operadorId, reporteId) antes de ejecutar las peticiones que dependen de ellas.
+
+### 1) Crear Ciudadano (POST /api/cuenta - tipoCuenta = CIUDADANO)
+POST {{baseUrl}}/cuenta
+Content-Type: {{contentType}}
+
+{
+  "tipoCuenta": "CIUDADANO",
+  "usuario": "flow_ciudadano_",
+  "contrasena": "Password123",
+  "nombres": "Flow",
+  "apellidos": "Ciudadano",
+  "dni": "90000001",
+  "telefono": "999000111",
+  "correo": "flow.ciudadano@example.com",
+  "activo": true
+}
+
+# -> Copia el "id" de la respuesta y pégalo en la cabecera de este archivo como @ciudadanoId = <id>
+
+### 2) Crear Técnico (POST /api/cuenta - tipoCuenta = TECNICO)
+POST {{baseUrl}}/cuenta
+Content-Type: {{contentType}}
+
+{
+  "tipoCuenta": "TECNICO",
+  "usuario": "flow_tecnico_",
+  "contrasena": "Password123",
+  "nombres": "Flow",
+  "apellidos": "Tecnico",
+  "dni": "90000002",
+  "telefono": "999000222",
+  "correo": "flow.tecnico@example.com",
+  "activo": true
+}
+
+# -> Copia el "id" y pégalo como @tecnicoId = <id>
+
+### 3) Crear Operador Municipal (POST /api/cuenta - tipoCuenta = OPERADOR_MUNICIPAL)
+POST {{baseUrl}}/cuenta
+Content-Type: {{contentType}}
+
+{
+  "tipoCuenta": "OPERADOR_MUNICIPAL",
+  "usuario": "flow_ovperador_",
+  "contrasena": "Password123",
+  "nombres": "Flow",
+  "apellidos": "Operador",
+  "dni": "90000007",
+  "telefono": "999000333",
+  "correo": "flow.operador@example.1com",
+  "activo": true
+}
+
+# -> Copia el "id" y pégalo como @operadorId = <id>
+
+### 4) Crear Reporte (POST /api/reportes) - usar cuentaId = ciudadanoId
+POST {{baseUrl}}/reportes
+Content-Type: {{contentType}}
+
+{
+  "titulo": "Flujo: Basura acumulada",
+  "descripcion": "Prueba de flujo: basura acumulada en esquina",
+  "cuentaId": 1,
+
+  "ubicacion": {
+    "latitud": -12.1200,
+    "longitud": -77.0350,
+    "direccion": "Jr. de Prueba 123"
+  }
+}
+
+# -> Copia el "id" del reporte creado y pégalo como @reporteId = <id>
+
+### 5) Ver reporte creado
+GET {{baseUrl}}/reportes/1
+
+### 6) Cambiar estado del reporte a REVISION
+PATCH {{baseUrl}}/reportes/1/estado?nuevoEstado=REVISION
+
+### 7) Crear Asignación (POST /api/asignaciones) - operador asigna técnico
+POST {{baseUrl}}/asignaciones
+Content-Type: {{contentType}}
+
+{
+  "reporteId": 6,
+  "operadorId": 1,
+  "tecnicoId": 3
+}
+
+### 8) Ver reporte actualizado (debería estar en estado PROCESO)
+GET {{baseUrl}}/reportes/1
+
+### 9) Listar técnicos (paginado)
+GET {{baseUrl}}/tecnicos?page=0
+
+### 10) Listar reportes (paginado)
+GET {{baseUrl}}/reportes?page=0
+
+# Fin del flujo completo

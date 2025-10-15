@@ -4,17 +4,16 @@ import com.ulima.incidenciaurbana.dto.ReporteDTO;
 import com.ulima.incidenciaurbana.model.EstadoReporte;
 import com.ulima.incidenciaurbana.model.Prioridad;
 import java.util.List;
+import org.springframework.data.domain.Page;
 
 public interface IReporteService {
     ReporteDTO crearReporte(ReporteDTO reporteDTO);
 
-    ReporteDTO obtenerReportePorId(Long id);
+    Page<ReporteDTO> obtenerTodosReportes(int page);
 
-    List<ReporteDTO> obtenerTodosReportes();
+    // OperadorMunicipal will use obtenerTodosReportes(int page) for paginated access
 
-    List<ReporteDTO> obtenerReportesPorEstado(EstadoReporte estado);
-
-    List<ReporteDTO> obtenerReportesPorCuenta(Long cuentaId);
+    org.springframework.data.domain.Page<ReporteDTO> obtenerReportesPorCuenta(Long cuentaId, int page);
 
     ReporteDTO actualizarReporte(Long id, ReporteDTO reporteDTO);
 
@@ -23,6 +22,4 @@ public interface IReporteService {
     ReporteDTO cambiarPrioridadReporte(Long id, Prioridad nuevaPrioridad);
 
     void eliminarReporte(Long id);
-
-    ReporteDTO asignarTecnicoReporte(Long reporteId, Long operadorId, Long tecnicoId);
 }

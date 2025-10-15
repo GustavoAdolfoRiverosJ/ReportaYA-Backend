@@ -33,33 +33,24 @@ public class ReporteController {
         }
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ReporteDTO> obtenerReporte(@PathVariable Long id) {
-        try {
-            ReporteDTO reporte = reporteService.obtenerReportePorId(id);
-            return new ResponseEntity<>(reporte, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        }
-    }
 
     @GetMapping
-    public ResponseEntity<List<ReporteDTO>> obtenerTodosReportes() {
-        List<ReporteDTO> reportes = reporteService.obtenerTodosReportes();
+    public ResponseEntity<org.springframework.data.domain.Page<ReporteDTO>> obtenerTodosReportes(
+            @RequestParam(name = "page", defaultValue = "0") int page) {
+        var reportes = reporteService.obtenerTodosReportes(page);
         return new ResponseEntity<>(reportes, HttpStatus.OK);
     }
 
     @GetMapping("/cuenta/{cuentaId}")
-    public ResponseEntity<List<ReporteDTO>> obtenerReportesPorCuenta(@PathVariable Long cuentaId) {
-        List<ReporteDTO> reportes = reporteService.obtenerReportesPorCuenta(cuentaId);
+    public ResponseEntity<org.springframework.data.domain.Page<ReporteDTO>> obtenerReportesPorCuenta(
+            @PathVariable Long cuentaId,
+            @RequestParam(name = "page", defaultValue = "0") int page) {
+        var reportes = reporteService.obtenerReportesPorCuenta(cuentaId, page);
         return new ResponseEntity<>(reportes, HttpStatus.OK);
     }
 
-    @GetMapping("/estado/{estado}")
-    public ResponseEntity<List<ReporteDTO>> obtenerReportesPorEstado(@PathVariable EstadoReporte estado) {
-        List<ReporteDTO> reportes = reporteService.obtenerReportesPorEstado(estado);
-        return new ResponseEntity<>(reportes, HttpStatus.OK);
-    }
+    // Operador-specific endpoint removed. Use GET /api/reportes?page={n} instead.
+
 
     @PutMapping("/{id}")
     public ResponseEntity<ReporteDTO> actualizarReporte(
@@ -107,16 +98,4 @@ public class ReporteController {
         }
     }
 
-    @PostMapping("/{id}/triaje")
-    public ResponseEntity<ReporteDTO> asignarTecnicoReporte(
-            @PathVariable Long id,
-            @RequestParam(required = false) Long operadorId,
-            @RequestParam Long tecnicoId) {
-        try {
-            ReporteDTO reporteActualizado = reporteService.asignarTecnicoReporte(id, operadorId, tecnicoId);
-            return new ResponseEntity<>(reporteActualizado, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        }
-    }
 }

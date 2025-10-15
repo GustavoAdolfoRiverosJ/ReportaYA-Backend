@@ -9,6 +9,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controller para operaciones CRUD de Ciudadanos
+ * NOTA: Para CREAR ciudadanos, usar el endpoint unificado: POST /api/cuenta
+ * Este controller solo maneja: Leer, Actualizar, Eliminar
+ */
 @RestController
 @RequestMapping("/api/ciudadanos")
 @CrossOrigin(origins = "*")
@@ -21,15 +26,8 @@ public class CiudadanoController {
         this.ciudadanoService = ciudadanoService;
     }
     
-    @PostMapping
-    public ResponseEntity<CiudadanoDTO> crearCiudadano(@RequestBody CiudadanoDTO ciudadanoDTO) {
-        try {
-            CiudadanoDTO nuevoCiudadano = ciudadanoService.crearCiudadano(ciudadanoDTO);
-            return new ResponseEntity<>(nuevoCiudadano, HttpStatus.CREATED);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        }
-    }
+    // NOTA: Método crearCiudadano eliminado
+    // Usar POST /api/cuenta con tipoCuenta: "CIUDADANO"
     
     @GetMapping("/{id}")
     public ResponseEntity<CiudadanoDTO> obtenerCiudadano(@PathVariable Long id) {
@@ -41,21 +39,6 @@ public class CiudadanoController {
         }
     }
     
-    @GetMapping
-    public ResponseEntity<List<CiudadanoDTO>> obtenerTodosCiudadanos() {
-        List<CiudadanoDTO> ciudadanos = ciudadanoService.obtenerTodosCiudadanos();
-        return new ResponseEntity<>(ciudadanos, HttpStatus.OK);
-    }
-    
-    @GetMapping("/dni/{dni}")
-    public ResponseEntity<CiudadanoDTO> obtenerCiudadanoPorDni(@PathVariable String dni) {
-        try {
-            CiudadanoDTO ciudadano = ciudadanoService.obtenerCiudadanoPorDni(dni);
-            return new ResponseEntity<>(ciudadano, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        }
-    }
     
     @PutMapping("/{id}")
     public ResponseEntity<CiudadanoDTO> actualizarCiudadano(

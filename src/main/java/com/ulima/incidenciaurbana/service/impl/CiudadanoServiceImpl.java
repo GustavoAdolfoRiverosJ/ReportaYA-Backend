@@ -24,26 +24,6 @@ public class CiudadanoServiceImpl implements ICiudadanoService {
     }
     
     @Override
-    public CiudadanoDTO crearCiudadano(CiudadanoDTO ciudadanoDTO) {
-        Persona persona = new Persona(
-            ciudadanoDTO.getNombres(),
-            ciudadanoDTO.getApellidos(),
-            ciudadanoDTO.getDni(),
-            ciudadanoDTO.getTelefono(),
-            ciudadanoDTO.getCorreo()
-        );
-        
-        Ciudadano ciudadano = new Ciudadano(
-            ciudadanoDTO.getUsuario(),
-            "hash_password_placeholder", // En producción, usar BCrypt
-            persona
-        );
-        
-        ciudadano = ciudadanoRepository.save(ciudadano);
-        return convertirADTO(ciudadano);
-    }
-    
-    @Override
     @Transactional(readOnly = true)
     public CiudadanoDTO obtenerCiudadanoPorId(Long id) {
         Ciudadano ciudadano = ciudadanoRepository.findById(id)
@@ -51,21 +31,6 @@ public class CiudadanoServiceImpl implements ICiudadanoService {
         return convertirADTO(ciudadano);
     }
     
-    @Override
-    @Transactional(readOnly = true)
-    public List<CiudadanoDTO> obtenerTodosCiudadanos() {
-        return ciudadanoRepository.findAll().stream()
-            .map(this::convertirADTO)
-            .collect(Collectors.toList());
-    }
-    
-    @Override
-    @Transactional(readOnly = true)
-    public CiudadanoDTO obtenerCiudadanoPorDni(String dni) {
-        Ciudadano ciudadano = ciudadanoRepository.findByPersonaDni(dni)
-            .orElseThrow(() -> new RuntimeException("Ciudadano no encontrado con DNI: " + dni));
-        return convertirADTO(ciudadano);
-    }
     
     @Override
     public CiudadanoDTO actualizarCiudadano(Long id, CiudadanoDTO ciudadanoDTO) {
