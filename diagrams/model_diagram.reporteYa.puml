@@ -63,16 +63,16 @@ class Imagen {
 
 ' Roles
 class Ciudadano {
-  + CrearReporte(): void
-  + ConsultarEstado(): void
+  + crearReporte(reporte: Reporte): void
+  + consultarEstado(): void
 }
 class OperadorMunicipal {
   + AsignarReporte(): void
   + RevisarReporte(): void
 }
 class Tecnico {
-  + aceptarAsignacion(): void
-  + completarAsignacion(): void
+  + aceptarAsignacion(asignacion: Asignacion): void
+  + completarAsignacion(asignacion: Asignacion): void
 }
 class Administrador {
   + gestionarCuenta(): void
@@ -81,7 +81,7 @@ class Administrador {
 ' Relaciones
 Persona "1" -- "1" Cuenta
 Cuenta "1" -- "0..*" Reporte
-Cuenta "1" -- "0..*" Asignacion
+ Cuenta "1" -- "0..*" Asignacion
 Reporte "1" -- "0..*" Asignacion
 Reporte "1" -- "0..*" Imagen
 Reporte "1" -- "1" Prioridad

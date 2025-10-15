@@ -1,5 +1,6 @@
 package com.ulima.incidenciaurbana.service;
 
+import com.ulima.incidenciaurbana.dto.TriajeRequest;
 import com.ulima.incidenciaurbana.dto.ReporteDTO;
 import com.ulima.incidenciaurbana.model.EstadoReporte;
 import com.ulima.incidenciaurbana.model.Prioridad;
@@ -24,6 +25,5 @@ public interface IReporteService {
 
     void eliminarReporte(Long id);
 
-    ReporteDTO triajeYAsignar(Long reporteId, Long operadorId,
-            com.ulima.incidenciaurbana.dto.TriajeRequest triajeRequest);
+    ReporteDTO triajeYAsignar(Long reporteId, Long operadorId, TriajeRequest triajeRequest);
 }

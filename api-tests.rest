@@ -15,13 +15,13 @@ POST {{baseUrl}}/ciudadanos
 Content-Type: {{contentType}}
 
 {
-    "nombres": "KAZZ",
-    "apellidos": "Pérez Ggrcía",
-    "dni": "12344678",
+    "nombres": "Juan Carlos",
+    "apellidos": "Pérez García",
+    "dni": "72345678",
     "telefono": "987654321",
-    "correo": "kazz.perez@email.com",
-    "usuario": "kzzz",
-    "contrasena": "pessro"
+    "correo": "juan.perez@email.com",
+    "usuario": "jperez",
+    "contrasena": "pedro"
 }
 
 ### 2. Listar Todos los Ciudadanos

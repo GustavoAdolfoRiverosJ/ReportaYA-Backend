@@ -1,51 +1,54 @@
 @baseUrl = http://localhost:8080/api
 @contentType = application/json
 
+
 ### ============================================
-### TRIAJE / ASIGNACIÓN - Endpoints (HU-10)
-### Flujo: poner reporte en REVISION -> asignar prioridad + técnico (operador realiza la acción)
+### ASIGNACIÓN - Endpoints (HU-10)
 ### ============================================
 
-# Nota: Si no tienes endpoints para crear Operador/Tecnico, usa IDs existentes en tu BD.
-# Ajusta los valores de operadorId y tecnicoId según tus datos.
+### A. Necesitas tener Extencion Rest Cliente, crear la BD, TABLAS Y HABER EJECUTADO llenar-TABLAS.sql
 
-### A. Poner reporte en REVISION (precondición HU)
-PATCH {{baseUrl}}/reportes/2/estado?nuevoEstado=REVISION
+### En resource revisar tu usuario y contraseña de tu DB: spring.datasource.password=tu-contraseña-superusuario
 
-### B. Asignar reporte a un Técnico (triaje) - caso feliz
-POST {{baseUrl}}/reportes/2/triaje?operadorId=2
+### Ejecutar el Servidor: ./mvnw spring-boot:run
+
+### B. Crear un reporte por el Ciudadano id=3 "ci_carlos"
+POST {{baseUrl}}/reportes
 Content-Type: {{contentType}}
 
 {
-    "prioridad": "BAJA",
-    "tecnicoId": 5
+	"titulo": "Bache en Av. Principal",
+	"descripcion": "Un bache grande que representa peligro",
+	"cuentaId": 3
 }
 
-### C. Verificar reporte actualizado
-GET {{baseUrl}}/reportes/2
+### Verificar reporte creado -> anotar reportId
+GET {{baseUrl}}/reportes
 
-### D. Reasignación: asignar a otro técnico (cerrará la asignación previa)
-POST {{baseUrl}}/reportes/2/triaje?operadorId=2
+### C. Cambiar estado del reporte a REVISION (precondición para triaje)
+PATCH {{baseUrl}}/reportes/{{reportId}}/estado?nuevoEstado=REVISION
+
+@reportId = 1
+
+### D. (si usaste SQL) Inserta operador y técnico en la BD y anota sus ids
+### -- después de ejecutar las SQL anteriores en la DB, fija las variables
+
+### E. Ejecutar triaje y asignación (operadorId pasado como query, prioridad y tecnicoId en body)
+POST {{baseUrl}}/reportes/{{reportId}}/triaje?operadorId={{operatorId}}
 Content-Type: {{contentType}}
 
 {
-    "prioridad": "MEDIA",
-    "tecnicoId": 6
+	"prioridad": "ALTA",
+	"tecnicoId": {{tecnicoId}}
 }
+@operatorId = 1
+@tecnicoId = 2
 
-### E. Caso de error: intentar asignar cuando el reporte NO está en REVISION
-# Primero poner el estado a PENDIENTE
-PATCH {{baseUrl}}/reportes/3/estado?nuevoEstado=PENDIENTE
 
-# Intentar triaje (debe fallar según reglas)
-POST {{baseUrl}}/reportes/3/triaje?operadorId=2
-Content-Type: {{contentType}}
 
-{
-    "prioridad": "ALTA",
-    "tecnicoId": 5
-}
+### F. Verificar asignaciones y estado del reporte
+GET {{baseUrl}}/reportes/{{reportId}}
 
 ### ============================================
-### FIN TRIAJE / ASIGNACIÓN
+### FIN ASIGNACIÓN
 ### ============================================

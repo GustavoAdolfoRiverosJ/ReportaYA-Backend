@@ -31,3 +31,22 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Logs and temp
+*.log
+hs_err_pid*
+*.tmp
+
+
+
+# General Java/Maven/IDE ignores
+*.class
+*.jar
+*.war
+*.ear
+
+# Hikari / pool files
+*.pid
+
+# Keep readme
+!README.md

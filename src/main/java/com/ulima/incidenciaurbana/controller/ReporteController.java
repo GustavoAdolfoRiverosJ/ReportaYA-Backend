@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.ulima.incidenciaurbana.dto.TriajeRequest;
 
 import java.util.List;
 
@@ -110,7 +111,7 @@ public class ReporteController {
     @PostMapping("/{id}/triaje")
     public ResponseEntity<ReporteDTO> triajeYAsignar(
             @PathVariable Long id,
-            @RequestBody com.ulima.incidenciaurbana.dto.TriajeRequest triajeRequest,
+            @RequestBody TriajeRequest triajeRequest,
             @RequestParam(required = false) Long operadorId) {
         try {
             ReporteDTO reporteActualizado = reporteService.triajeYAsignar(id, operadorId, triajeRequest);

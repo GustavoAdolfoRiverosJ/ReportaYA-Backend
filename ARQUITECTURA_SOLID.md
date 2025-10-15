@@ -26,6 +26,3 @@ PATCH  /api/reportes/{id}/estado          - Cambiar estado
 PATCH  /api/reportes/{id}/prioridad       - Cambiar prioridad
 DELETE /api/reportes/{id}                 - Eliminar
 ```
-
----
-
