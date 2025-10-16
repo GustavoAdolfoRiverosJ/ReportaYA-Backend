@@ -3,7 +3,6 @@ package com.ulima.incidenciaurbana.service;
 import com.ulima.incidenciaurbana.dto.ReporteDTO;
 import com.ulima.incidenciaurbana.model.EstadoReporte;
 import com.ulima.incidenciaurbana.model.Prioridad;
-import java.util.List;
 import org.springframework.data.domain.Page;
 
 public interface IReporteService {

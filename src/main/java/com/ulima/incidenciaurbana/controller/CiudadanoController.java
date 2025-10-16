@@ -7,8 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 /**
  * Controller para operaciones CRUD de Ciudadanos
  * NOTA: Para CREAR ciudadanos, usar el endpoint unificado: POST /api/cuenta

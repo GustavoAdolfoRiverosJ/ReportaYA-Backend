@@ -1,7 +1,6 @@
 package com.ulima.incidenciaurbana.service;
 
 import com.ulima.incidenciaurbana.dto.CiudadanoDTO;
-import java.util.List;
 
 public interface ICiudadanoService {
     CiudadanoDTO obtenerCiudadanoPorId(Long id);
