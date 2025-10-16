@@ -101,18 +101,4 @@ public class CuentaController {
             return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
         }
     }
-    
-    /**
-     * Endpoint para obtener los tipos de cuenta válidos
-     * GET /api/cuenta/tipos
-     */
-    @GetMapping("/tipos")
-    public ResponseEntity<?> obtenerTiposCuenta() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("tipos", new String[]{"CIUDADANO", "TECNICO", "OPERADOR_MUNICIPAL"});
-        response.put("publico", new String[]{"CIUDADANO"});
-        response.put("protegido", new String[]{"TECNICO", "OPERADOR_MUNICIPAL"});
-        response.put("nota", "Para crear TECNICO u OPERADOR_MUNICIPAL se requiere autenticación de administrador");
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
 }
