@@ -17,13 +17,13 @@ Content-Type: {{contentType}}
 
 {
   "tipoCuenta": "CIUDADANO",
-  "usuario": "flow_ciudadano_",
-  "contrasena": "Password123",
-  "nombres": "Flow",
+  "usuario": "admin",
+  "contrasena": "12345678",
+  "nombres": "Floew",
   "apellidos": "Ciudadano",
-  "dni": "90000003",
+  "dni": "90000010",
   "telefono": "999000111",
-  "correo": "flow.ciudadano@example.com",
+  "correo": "flow.eecieudadano@example.com",
   "activo": true
 }
 
@@ -53,13 +53,13 @@ Content-Type: {{contentType}}
 
 {
   "tipoCuenta": "OPERADOR_MUNICIPAL",
-  "usuario": "flow_ovperador_",
-  "contrasena": "Password123",
+  "usuario": "admin2",
+  "contrasena": "12345678",
   "nombres": "Flow",
   "apellidos": "Operador",
-  "dni": "90000007",
+  "dni": "90000017",
   "telefono": "999000333",
-  "correo": "flow.operador@example.1com",
+  "correo": "flow.operador@emxample.1com",
   "activo": true
 }
 

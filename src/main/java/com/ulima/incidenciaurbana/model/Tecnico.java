@@ -11,6 +11,11 @@ public class Tecnico extends Cuenta {
         super();
     }
 
+    @Override
+    public String getTipoCuenta() {
+        return "TECNICO";
+    }
+
     public Tecnico(String usuario, String contrasenaHash, Persona persona) {
         super(usuario, contrasenaHash, persona);
     }

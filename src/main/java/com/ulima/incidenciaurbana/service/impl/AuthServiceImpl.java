@@ -28,7 +28,7 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidCredentialsException();
         }
 
-        String nombre = (c.getPersona() != null) ? c.getPersona().getNombreCompleto() : "";
-        return new LoginResponse(c.getId(), c.getUsuario(), nombre, "Login exitoso");
+    String nombre = (c.getPersona() != null) ? c.getPersona().getNombreCompleto() : "";
+    return new LoginResponse(c.getId(), c.getUsuario(), nombre, "Login exitoso", c.getTipoCuenta());
     }
 }

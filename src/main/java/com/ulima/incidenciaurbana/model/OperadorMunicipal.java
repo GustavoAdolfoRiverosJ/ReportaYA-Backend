@@ -33,4 +33,8 @@ public class OperadorMunicipal extends Cuenta {
     }
 
     // OperadorMunicipal delega a los servicios para operaciones de lectura paginada.
+    @Override
+    public String getTipoCuenta() {
+        return "OPERADOR_MUNICIPAL";
+    }
 }

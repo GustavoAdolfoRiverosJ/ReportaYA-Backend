@@ -132,6 +132,12 @@ public abstract class Cuenta {
         this.activo = activo;
     }
 
+    /**
+     * Retorna el tipo de cuenta concreto (p. ej. CIUDADANO, TECNICO, OPERADOR_MUNICIPAL).
+     * Cada subclase debe implementar este método para indicar su tipo.
+     */
+    public abstract String getTipoCuenta();
+
     @Override
     public boolean equals(Object o) {
         if (this == o)

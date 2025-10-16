@@ -25,4 +25,9 @@ public class Ciudadano extends Cuenta {
         // Lógica para consultar estado de reportes
         System.out.println("Consultando estado de reportes del ciudadano: " + getPersona().getNombreCompleto());
     }
+
+    @Override
+    public String getTipoCuenta() {
+        return "CIUDADANO";
+    }
 }
