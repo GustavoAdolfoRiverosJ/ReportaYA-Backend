@@ -4,7 +4,7 @@ import com.ulima.incidenciaurbana.dto.LoginRequest;
 import com.ulima.incidenciaurbana.dto.LoginResponse;
 import com.ulima.incidenciaurbana.exception.InvalidCredentialsException;
 import com.ulima.incidenciaurbana.model.Cuenta;
-import com.ulima.incidenciaurbana.repository.CuentaRepo;
+import com.ulima.incidenciaurbana.repository.CuentaRepository;
 import com.ulima.incidenciaurbana.service.AuthService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,18 +13,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class AuthServiceImpl implements AuthService {
 
-    private final CuentaRepo cuentaRepo;
+    private final CuentaRepository cuentaRepository;
 
-    public AuthServiceImpl(CuentaRepo cuentaRepo) {
-        this.cuentaRepo = cuentaRepo;
+    public AuthServiceImpl(CuentaRepository cuentaRepository) {
+        this.cuentaRepository = cuentaRepository;
     }
 
     @Override
     public LoginResponse login(LoginRequest request) {
-        Cuenta c = cuentaRepo.findByUsuarioAndActivoTrue(request.getUsuario())
-                .orElseThrow(InvalidCredentialsException::new);
+    Cuenta c = cuentaRepository.findByUsuarioAndActivoTrue(request.getUsuario())
+        .orElseThrow(InvalidCredentialsException::new);
 
-        if (!c.getContrasena().equals(request.getPassword())) {
+        if (!c.getContrasenaHash().equals(request.getPassword())) {
             throw new InvalidCredentialsException();
         }
 

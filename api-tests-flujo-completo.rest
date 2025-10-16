@@ -21,7 +21,7 @@ Content-Type: {{contentType}}
   "contrasena": "Password123",
   "nombres": "Flow",
   "apellidos": "Ciudadano",
-  "dni": "90000001",
+  "dni": "90000003",
   "telefono": "999000111",
   "correo": "flow.ciudadano@example.com",
   "activo": true
