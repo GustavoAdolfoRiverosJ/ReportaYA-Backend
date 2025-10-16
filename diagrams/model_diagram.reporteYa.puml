@@ -1,0 +1,92 @@
+@startuml Modelo dominio - ReportaYA
+' Enumeraciones
+enum Prioridad {
+  BAJA
+  MEDIA
+  ALTA
+}
+
+enum EstadoReporte {
+  PENDIENTE
+  REVISION
+  PROCESO
+  FINALIZADO
+  RECHAZADO
+}
+
+class Persona {
+  - id: integer
+  - nombres: String
+  - apellidos: String
+  - dni: String
+  - telefono: String
+  - correo: String
+  + nombreCompleto(): String
+  + ActualizarDatos(): void
+}
+
+class Cuenta {
+  - id: integer
+  + usuario: String
+  + contraseniaHash: String
+  + FechaCreacion: Date
+  + activo: boolean
+  + CrearCuenta(): void
+  + cambiarContrasenia(): void
+}
+
+class Reporte {
+  - id: integer
+  - titulo: String
+  - descripcion: String
+  + AgregarPermiso(): void
+  + QuitarPermiso(): void
+  + TienePermiso(): void
+}
+
+class Asignacion {
+  - id: integer
+  - fechaAsignacion: Date
+  - fechaAceptacion: Date
+  - fechaCierre: Date
+}
+
+class Imagen {
+  - id: integer
+  - url: String
+  - tamaño: long
+  - archivo: long
+  + validarTipoPeso(): void
+}
+
+' Roles
+class Ciudadano {
+  + CrearReporte(): void
+  + ConsultarEstado(): void
+}
+class OperadorMunicipal {
+  + AsignarReporte(): void
+  + RevisarReporte(): void
+}
+class Tecnico {
+  + completarAsignacion(): void
+}
+class Administrador {
+  + gestionarCuenta(): void
+}
+
+' Relaciones
+Persona "1" -- "1" Cuenta
+Cuenta "1" -- "0..*" Reporte
+Cuenta "1" -- "0..*" Asignacion
+Reporte "1" -- "0..*" Asignacion
+Reporte "1" -- "0..*" Imagen
+Reporte "1" -- "1" Prioridad
+Reporte "1" -- "1" EstadoReporte
+
+Ciudadano ..|> Cuenta
+OperadorMunicipal ..|> Cuenta
+Tecnico ..|> Cuenta
+Administrador ..|> Cuenta
+
+@enduml
