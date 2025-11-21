@@ -1,5 +1,6 @@
 package com.ulima.incidenciaurbana.dto;
 
+import com.ulima.incidenciaurbana.model.Prioridad;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
@@ -16,6 +17,9 @@ public class AsignacionDTO {
     @NotNull(message = "El ID del técnico es obligatorio")
     private Long tecnicoId;
 
+    @NotNull(message = "La prioridad es obligatoria. Selecciona BAJA, MEDIA o ALTA")
+    private Prioridad prioridad;
+
     private String reporteTitulo;
     private String operadorNombre;
     private String tecnicoNombre;
@@ -27,20 +31,22 @@ public class AsignacionDTO {
     }
 
     // Constructor para request (crear asignación)
-    public AsignacionDTO(Long reporteId, Long operadorId, Long tecnicoId) {
+    public AsignacionDTO(Long reporteId, Long operadorId, Long tecnicoId, Prioridad prioridad) {
         this.reporteId = reporteId;
         this.operadorId = operadorId;
         this.tecnicoId = tecnicoId;
+        this.prioridad = prioridad;
     }
 
     // Constructor completo para response
     public AsignacionDTO(Long id, Long reporteId, Long operadorId, Long tecnicoId,
-                         String reporteTitulo, String operadorNombre, String tecnicoNombre,
-                         LocalDateTime fechaAsignacion, LocalDateTime fechaCierre) {
+            Prioridad prioridad, String reporteTitulo, String operadorNombre, String tecnicoNombre,
+            LocalDateTime fechaAsignacion, LocalDateTime fechaCierre) {
         this.id = id;
         this.reporteId = reporteId;
         this.operadorId = operadorId;
         this.tecnicoId = tecnicoId;
+        this.prioridad = prioridad;
         this.reporteTitulo = reporteTitulo;
         this.operadorNombre = operadorNombre;
         this.tecnicoNombre = tecnicoNombre;
@@ -79,6 +85,14 @@ public class AsignacionDTO {
 
     public void setTecnicoId(Long tecnicoId) {
         this.tecnicoId = tecnicoId;
+    }
+
+    public Prioridad getPrioridad() {
+        return prioridad;
+    }
+
+    public void setPrioridad(Prioridad prioridad) {
+        this.prioridad = prioridad;
     }
 
     public String getReporteTitulo() {

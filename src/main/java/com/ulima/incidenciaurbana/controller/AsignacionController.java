@@ -23,17 +23,6 @@ public class AsignacionController {
         this.asignacionService = asignacionService;
     }
 
-    /**
-     * POST /api/asignaciones - Crear una nueva asignación (triaje)
-     * Ejecutado por un OperadorMunicipal para asignar un técnico a un reporte
-     * 
-     * Body:
-     * {
-     *   "reporteId": 1,
-     *   "operadorId": 2,
-     *   "tecnicoId": 3
-     * }
-     */
     @PostMapping
     public ResponseEntity<?> crearAsignacion(@Valid @RequestBody AsignacionDTO asignacionDTO) {
         try {

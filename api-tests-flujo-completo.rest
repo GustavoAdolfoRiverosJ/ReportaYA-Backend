@@ -87,7 +87,7 @@ Content-Type: {{contentType}}
 GET {{baseUrl}}/reportes/1
 
 ### 6) Cambiar estado del reporte a REVISION
-PATCH {{baseUrl}}/reportes/1/estado?nuevoEstado=REVISION
+PATCH {{baseUrl}}/reportes/1/estado?nuevoEstado=PENDIENTE
 
 ### 7) Crear Asignación (POST /api/asignaciones) - operador asigna técnico
 POST {{baseUrl}}/asignaciones
