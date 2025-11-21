@@ -34,8 +34,9 @@ public class ReporteController {
 
     @GetMapping
     public ResponseEntity<org.springframework.data.domain.Page<ReporteDTO>> obtenerTodosReportes(
-            @RequestParam(name = "page", defaultValue = "0") int page) {
-        var reportes = reporteService.obtenerTodosReportes(page);
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "estado", required = false) EstadoReporte estado) {
+        var reportes = reporteService.obtenerTodosReportes(page, estado);
         return new ResponseEntity<>(reportes, HttpStatus.OK);
     }
 
@@ -68,6 +69,18 @@ public class ReporteController {
             @RequestParam EstadoReporte nuevoEstado) {
         try {
             ReporteDTO reporteActualizado = reporteService.cambiarEstadoReporte(id, nuevoEstado);
+            return new ResponseEntity<>(reporteActualizado, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PostMapping("/{id}/rechazar")
+    public ResponseEntity<ReporteDTO> rechazarReporte(
+            @PathVariable Long id,
+            @RequestParam String motivo) {
+        try {
+            ReporteDTO reporteActualizado = reporteService.rechazarReporte(id, motivo);
             return new ResponseEntity<>(reporteActualizado, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);

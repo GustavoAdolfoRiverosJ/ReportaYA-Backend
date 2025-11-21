@@ -4,6 +4,7 @@ public enum EstadoReporte {
     PENDIENTE,
     REVISION,
     PROCESO,
-    FINALIZADO,
+    RESUELTA,
+    CERRADA,
     RECHAZADO
 }

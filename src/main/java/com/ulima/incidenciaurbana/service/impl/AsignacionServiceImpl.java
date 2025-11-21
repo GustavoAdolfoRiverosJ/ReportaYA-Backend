@@ -15,8 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -38,9 +36,13 @@ public class AsignacionServiceImpl implements IAsignacionService {
     @Override
     public AsignacionDTO crearAsignacion(AsignacionDTO asignacionDTO) {
         // Validar reporte
-        Reporte reporte = reporteRepository.findById(asignacionDTO.getReporteId())
+        if (asignacionDTO.getReporteId() == null) {
+            throw new RuntimeException("El ID del reporte es obligatorio");
+        }
+        long reporteId = asignacionDTO.getReporteId();
+        Reporte reporte = reporteRepository.findById(reporteId)
                 .orElseThrow(() -> new RuntimeException(
-                        "Reporte no encontrado con id: " + asignacionDTO.getReporteId()));
+                        "Reporte no encontrado con id: " + reporteId));
 
         // Validar que el reporte esté en estado REVISION
         if (reporte.getEstado() != EstadoReporte.REVISION) {
@@ -49,31 +51,39 @@ public class AsignacionServiceImpl implements IAsignacionService {
         }
 
         // Validar y obtener operador municipal
-        Cuenta operadorCuenta = cuentaRepository.findById(asignacionDTO.getOperadorId())
+        if (asignacionDTO.getOperadorId() == null) {
+            throw new RuntimeException("El ID del operador es obligatorio");
+        }
+        long operadorId = asignacionDTO.getOperadorId();
+        Cuenta operadorCuenta = cuentaRepository.findById(operadorId)
                 .orElseThrow(() -> new RuntimeException(
-                        "Operador no encontrado con id: " + asignacionDTO.getOperadorId()));
+                        "Operador no encontrado con id: " + operadorId));
 
         if (!(operadorCuenta instanceof OperadorMunicipal)) {
             throw new RuntimeException(
-                    "El usuario con id " + asignacionDTO.getOperadorId() + " no es un operador municipal");
+                    "El usuario con id " + operadorId + " no es un operador municipal");
         }
 
         OperadorMunicipal operador = (OperadorMunicipal) operadorCuenta;
 
         // Validar y obtener técnico
-        Cuenta tecnicoCuenta = cuentaRepository.findById(asignacionDTO.getTecnicoId())
+        if (asignacionDTO.getTecnicoId() == null) {
+            throw new RuntimeException("El ID del técnico es obligatorio");
+        }
+        long tecnicoId = asignacionDTO.getTecnicoId();
+        Cuenta tecnicoCuenta = cuentaRepository.findById(tecnicoId)
                 .orElseThrow(() -> new RuntimeException(
-                        "Técnico no encontrado con id: " + asignacionDTO.getTecnicoId()));
+                        "Técnico no encontrado con id: " + tecnicoId));
 
         if (!(tecnicoCuenta instanceof Tecnico)) {
             throw new RuntimeException(
-                    "El usuario con id " + asignacionDTO.getTecnicoId() + " no es un técnico");
+                    "El usuario con id " + tecnicoId + " no es un técnico");
         }
 
         Tecnico tecnico = (Tecnico) tecnicoCuenta;
 
         // Cerrar asignación previa si existe (solo puede haber una asignación activa por reporte)
-        asignacionRepository.findByReporteIdAndFechaCierreIsNull(asignacionDTO.getReporteId())
+        asignacionRepository.findByReporteIdAndFechaCierreIsNull(reporteId)
                 .ifPresent(asignacionPrevia -> {
                     asignacionPrevia.setFechaCierre(java.time.LocalDateTime.now());
                     asignacionRepository.save(asignacionPrevia);
@@ -81,6 +91,9 @@ public class AsignacionServiceImpl implements IAsignacionService {
 
         // Crear la nueva asignación usando el modelo
         Asignacion asignacion = operador.asignarTecnico(reporte, tecnico);
+        if (asignacion == null) {
+            throw new RuntimeException("Error al crear la asignación");
+        }
         asignacion = asignacionRepository.save(asignacion);
 
         // Actualizar estado del reporte a PROCESO

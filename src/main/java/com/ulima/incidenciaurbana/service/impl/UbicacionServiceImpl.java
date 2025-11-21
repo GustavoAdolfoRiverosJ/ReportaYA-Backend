@@ -22,15 +22,23 @@ public class UbicacionServiceImpl implements IUbicacionService {
     @Override
     @Transactional(readOnly = true)
     public UbicacionDTO obtenerUbicacionPorId(Long id) {
-        Ubicacion ubicacion = ubicacionRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Ubicación no encontrada con id: " + id));
+        if (id == null) {
+            throw new RuntimeException("El ID de la ubicación es obligatorio");
+        }
+        long ubicacionId = id;
+        Ubicacion ubicacion = ubicacionRepository.findById(ubicacionId)
+            .orElseThrow(() -> new RuntimeException("Ubicación no encontrada con id: " + ubicacionId));
         return convertirADTO(ubicacion);
     }
     
     @Override
     public UbicacionDTO actualizarUbicacion(Long id, UbicacionDTO ubicacionDTO) {
-        Ubicacion ubicacion = ubicacionRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Ubicación no encontrada con id: " + id));
+        if (id == null) {
+            throw new RuntimeException("El ID de la ubicación es obligatorio");
+        }
+        long ubicacionId = id;
+        Ubicacion ubicacion = ubicacionRepository.findById(ubicacionId)
+            .orElseThrow(() -> new RuntimeException("Ubicación no encontrada con id: " + ubicacionId));
         
         ubicacion.setLatitud(ubicacionDTO.getLatitud());
         ubicacion.setLongitud(ubicacionDTO.getLongitud());

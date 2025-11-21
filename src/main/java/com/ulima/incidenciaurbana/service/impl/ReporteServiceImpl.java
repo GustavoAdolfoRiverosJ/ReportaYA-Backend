@@ -19,6 +19,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
+import com.ulima.incidenciaurbana.model.HistorialEstado;
+import com.ulima.incidenciaurbana.model.MensajeNotificacion;
+import com.ulima.incidenciaurbana.model.RechazoMensaje;
+import com.ulima.incidenciaurbana.repository.HistorialEstadoRepository;
+import com.ulima.incidenciaurbana.repository.MensajeNotificacionRepository;
+import com.ulima.incidenciaurbana.repository.RechazoMensajeRepository;
+import com.ulima.incidenciaurbana.service.INotificationService;
+
 @Service
 @Transactional
 public class ReporteServiceImpl implements IReporteService {
@@ -26,14 +34,28 @@ public class ReporteServiceImpl implements IReporteService {
     private final ReporteRepository reporteRepository;
     private final CuentaRepository cuentaRepository;
     private final UbicacionRepository ubicacionRepository;
+    private final HistorialEstadoRepository historialEstadoRepository;
+    private final INotificationService notificationService;
+    private final RechazoMensajeRepository rechazoMensajeRepository;
+    private final MensajeNotificacionRepository mensajeNotificacionRepository;
     
     private static final int PAGE_SIZE = 10;
 
     @Autowired
-    public ReporteServiceImpl(ReporteRepository reporteRepository, CuentaRepository cuentaRepository, UbicacionRepository ubicacionRepository) {
+    public ReporteServiceImpl(ReporteRepository reporteRepository, 
+                              CuentaRepository cuentaRepository, 
+                              UbicacionRepository ubicacionRepository,
+                              HistorialEstadoRepository historialEstadoRepository,
+                              INotificationService notificationService,
+                              RechazoMensajeRepository rechazoMensajeRepository,
+                              MensajeNotificacionRepository mensajeNotificacionRepository) {
         this.reporteRepository = reporteRepository;
         this.cuentaRepository = cuentaRepository;
         this.ubicacionRepository = ubicacionRepository;
+        this.historialEstadoRepository = historialEstadoRepository;
+        this.notificationService = notificationService;
+        this.rechazoMensajeRepository = rechazoMensajeRepository;
+        this.mensajeNotificacionRepository = mensajeNotificacionRepository;
     }
 
     @Override
@@ -48,8 +70,12 @@ public class ReporteServiceImpl implements IReporteService {
             throw new RuntimeException("La latitud y longitud son obligatorias en la ubicación");
         }
         
-        Cuenta cuenta = cuentaRepository.findById(reporteDTO.getCuentaId())
-                .orElseThrow(() -> new RuntimeException("Cuenta no encontrada con id: " + reporteDTO.getCuentaId()));
+        if (reporteDTO.getCuentaId() == null) {
+            throw new RuntimeException("El ID de la cuenta es obligatorio");
+        }
+        long cuentaId = reporteDTO.getCuentaId();
+        Cuenta cuenta = cuentaRepository.findById(cuentaId)
+                .orElseThrow(() -> new RuntimeException("Cuenta no encontrada con id: " + cuentaId));
 
         Reporte reporte = new Reporte(
                 reporteDTO.getTitulo(),
@@ -62,21 +88,36 @@ public class ReporteServiceImpl implements IReporteService {
         
         // Crear y asociar ubicación (ahora es obligatoria)
         Ubicacion ubicacion = convertirDTOAUbicacion(reporteDTO.getUbicacion());
+        if (ubicacion == null) {
+            throw new RuntimeException("Error al crear la ubicación");
+        }
         ubicacion = ubicacionRepository.save(ubicacion);
         reporte.setUbicacion(ubicacion);
 
         cuenta.crearReporte(reporte);
         reporte = reporteRepository.save(reporte);
+        
+        // Guardar historial inicial
+        HistorialEstado historial = new HistorialEstado(reporte, null, reporte.getEstado());
+        historialEstadoRepository.save(historial);
+        
         return convertirADTO(reporte);
     }
 
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReporteDTO> obtenerTodosReportes(int page) {
+    public Page<ReporteDTO> obtenerTodosReportes(int page, EstadoReporte estado) {
         int p = Math.max(0, page);
-    return reporteRepository.findAll(PageRequest.of(p, PAGE_SIZE, Sort.by("fechaCreacion").descending()))
-        .map(this::convertirADTO);
+        PageRequest pageRequest = PageRequest.of(p, PAGE_SIZE, Sort.by("fechaCreacion").descending());
+        
+        if (estado != null) {
+            return reporteRepository.findByEstado(estado, pageRequest)
+                    .map(this::convertirADTO);
+        }
+        
+        return reporteRepository.findAll(pageRequest)
+            .map(this::convertirADTO);
     }
 
 
@@ -90,8 +131,12 @@ public class ReporteServiceImpl implements IReporteService {
 
     @Override
     public ReporteDTO actualizarReporte(Long id, ReporteDTO reporteDTO) {
-        Reporte reporte = reporteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + id));
+        if (id == null) {
+            throw new RuntimeException("El ID del reporte es obligatorio");
+        }
+        long reporteId = id;
+        Reporte reporte = reporteRepository.findById(reporteId)
+                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + reporteId));
 
         reporte.setTitulo(reporteDTO.getTitulo());
         reporte.setDescripcion(reporteDTO.getDescripcion());
@@ -123,18 +168,90 @@ public class ReporteServiceImpl implements IReporteService {
 
     @Override
     public ReporteDTO cambiarEstadoReporte(Long id, EstadoReporte nuevoEstado) {
-        Reporte reporte = reporteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + id));
+        if (id == null) {
+            throw new RuntimeException("El ID del reporte es obligatorio");
+        }
+        long reporteId = id;
+        Reporte reporte = reporteRepository.findById(reporteId)
+                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + reporteId));
 
+        EstadoReporte estadoAnterior = reporte.getEstado();
+        
+        // Si el estado no cambia, no hacemos nada
+        if (estadoAnterior == nuevoEstado) {
+            return convertirADTO(reporte);
+        }
+        
         reporte.cambiarEstado(nuevoEstado);
         reporte = reporteRepository.save(reporte);
+        
+        // Guardar historial
+        HistorialEstado historial = new HistorialEstado(reporte, estadoAnterior, nuevoEstado);
+        historialEstadoRepository.save(historial);
+        
+        // Enviar notificación
+        String mensaje = "El estado de tu reporte '" + reporte.getTitulo() + "' ha cambiado a " + nuevoEstado;
+        
+        // Buscar mensaje personalizado
+        MensajeNotificacion mensajeNotificacion = mensajeNotificacionRepository.findByEstado(nuevoEstado).orElse(null);
+        if (mensajeNotificacion != null) {
+            mensaje = mensajeNotificacion.getMensaje();
+        }
+        
+        notificationService.enviarNotificacion(reporte.getCuenta().getId(), "Actualización de Reporte", mensaje);
+        
+        return convertirADTO(reporte);
+    }
+
+    @Override
+    public ReporteDTO rechazarReporte(Long id, String motivo) {
+        if (id == null) {
+            throw new RuntimeException("El ID del reporte es obligatorio");
+        }
+        long reporteId = id;
+        Reporte reporte = reporteRepository.findById(reporteId)
+                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + reporteId));
+
+        EstadoReporte estadoAnterior = reporte.getEstado();
+        EstadoReporte nuevoEstado = EstadoReporte.RECHAZADO;
+        
+        if (estadoAnterior == nuevoEstado) {
+            return convertirADTO(reporte);
+        }
+        
+        reporte.cambiarEstado(nuevoEstado);
+        reporte = reporteRepository.save(reporte);
+        
+        // Guardar historial
+        HistorialEstado historial = new HistorialEstado(reporte, estadoAnterior, nuevoEstado);
+        historialEstadoRepository.save(historial);
+        
+        // Guardar motivo de rechazo
+        RechazoMensaje rechazo = new RechazoMensaje(reporte, motivo);
+        rechazoMensajeRepository.save(rechazo);
+        
+        // Enviar notificación
+        String mensaje = "Tu reporte ha sido rechazado. Motivo: " + motivo;
+        
+        // Buscar mensaje personalizado
+        MensajeNotificacion mensajeNotificacion = mensajeNotificacionRepository.findByEstado(nuevoEstado).orElse(null);
+        if (mensajeNotificacion != null) {
+            mensaje = mensajeNotificacion.getMensaje() + ". Motivo: " + motivo;
+        }
+        
+        notificationService.enviarNotificacion(reporte.getCuenta().getId(), "Reporte Rechazado", mensaje);
+        
         return convertirADTO(reporte);
     }
 
     @Override
     public ReporteDTO cambiarPrioridadReporte(Long id, Prioridad nuevaPrioridad) {
-        Reporte reporte = reporteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + id));
+        if (id == null) {
+            throw new RuntimeException("El ID del reporte es obligatorio");
+        }
+        long reporteId = id;
+        Reporte reporte = reporteRepository.findById(reporteId)
+                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + reporteId));
 
         reporte.cambiarPrioridad(nuevaPrioridad);
         reporte = reporteRepository.save(reporte);
@@ -143,10 +260,14 @@ public class ReporteServiceImpl implements IReporteService {
 
     @Override
     public void eliminarReporte(Long id) {
-        if (!reporteRepository.existsById(id)) {
-            throw new RuntimeException("Reporte no encontrado con id: " + id);
+        if (id == null) {
+            throw new RuntimeException("El ID del reporte es obligatorio");
         }
-        reporteRepository.deleteById(id);
+        long reporteId = id;
+        if (!reporteRepository.existsById(reporteId)) {
+            throw new RuntimeException("Reporte no encontrado con id: " + reporteId);
+        }
+        reporteRepository.deleteById(reporteId);
     }
 
     // Operator-specific paginated view removed; operators use obtenerTodosReportes(page)

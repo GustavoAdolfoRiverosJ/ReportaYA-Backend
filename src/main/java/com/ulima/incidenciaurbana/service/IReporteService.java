@@ -8,7 +8,7 @@ import org.springframework.data.domain.Page;
 public interface IReporteService {
     ReporteDTO crearReporte(ReporteDTO reporteDTO);
 
-    Page<ReporteDTO> obtenerTodosReportes(int page);
+    Page<ReporteDTO> obtenerTodosReportes(int page, EstadoReporte estado);
 
     // OperadorMunicipal will use obtenerTodosReportes(int page) for paginated access
 
@@ -19,6 +19,8 @@ public interface IReporteService {
     ReporteDTO cambiarEstadoReporte(Long id, EstadoReporte nuevoEstado);
 
     ReporteDTO cambiarPrioridadReporte(Long id, Prioridad nuevaPrioridad);
+    
+    ReporteDTO rechazarReporte(Long id, String motivo);
 
     void eliminarReporte(Long id);
 }
