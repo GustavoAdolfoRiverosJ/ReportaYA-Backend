@@ -1,4 +1,4 @@
-@startuml Modelo dominio - ReportaYA
+@startuml Modelo dominio - ReportaYA (Versión Merge Main)
 
 ' =======================
 ' ENUMERACIONES
@@ -96,6 +96,25 @@ class Foto {
   - fechaCarga: LocalDateTime
 }
 
+class HistorialEstado {
+  - id: Long
+  - estadoAnterior: EstadoReporte
+  - estadoNuevo: EstadoReporte
+  - fechaCambio: LocalDateTime
+}
+
+class TokenNotificacion {
+  - id: Long
+  - token: String
+  - cuenta: Cuenta
+}
+
+class MensajeNotificacion {
+  - id: Long
+  - estado: EstadoReporte
+  - mensaje: String
+}
+
 ' =======================
 ' SUBCLASES DE CUENTA
 ' =======================
@@ -145,6 +164,15 @@ Reporte --> EstadoReporte : <<enumeration>>
 
 ' Reporte - Foto (1:N)
 Reporte "1" o-- "0..*" Foto : reporte_id >
+
+' Reporte - HistorialEstado (1:N - Auditoría)
+Reporte "1" o-- "0..*" HistorialEstado : reporte_id >
+
+' Cuenta - TokenNotificacion (1:1)
+Cuenta "1" -- "0..1" TokenNotificacion : cuenta_id >
+
+' MensajeNotificacion - EstadoReporte (por estado)
+MensajeNotificacion --> EstadoReporte : estado
 
 ' Foto - TipoFoto (Enum)
 Foto --> TipoFoto : <<enumeration>>
@@ -202,6 +230,31 @@ note left of Ubicacion
   Cada reporte debe tener
   coordenadas geográficas
   (latitud, longitud)
+end note
+
+note right of HistorialEstado
+  **Auditoría de cambios:**
+  Registra CADA transición de estado
+  - Estado anterior y nuevo
+  - Fecha y hora exacta del cambio
+  - Permite rastrear completo del flujo
+end note
+
+note right of TokenNotificacion
+  **Notificaciones Firebase:**
+  Registra FCM token por usuario
+  - 1:1 con Cuenta (un token por usuario)
+  - Se actualiza cuando el usuario inicia sesión
+  - Usado por NotificationController
+end note
+
+note right of MensajeNotificacion
+  **Plantillas de notificación:**
+  Mensaje personalizado por EstadoReporte
+  Ejemplo:
+  - RESUELTA → "Tu reporte fue resuelto"
+  - CERRADA → "Tu reporte fue cerrado"
+  - RECHAZADO → "Tu reporte fue rechazado"
 end note
 
 @enduml

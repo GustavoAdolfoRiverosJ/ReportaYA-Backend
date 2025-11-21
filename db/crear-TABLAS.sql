@@ -4,12 +4,16 @@
 -- ============================================
 -- Ejecutar en la base de datos desde pgAdmin (Query Tool) como usuario con permisos.
 --
--- ÚLTIMA ACTUALIZACIÓN: 20 de noviembre de 2025
--- VERSIÓN: 2.0 - Sistema de Evidencias Fotográficas
+-- ÚLTIMA ACTUALIZACIÓN: 21 de noviembre de 2025
+-- VERSIÓN: 3.0 - Sistema de Evidencias Fotográficas + Historial + Notificaciones
 --
 -- NUEVAS CARACTERÍSTICAS:
 -- - Tabla 'fotos' para evidencias fotográficas (OBLIGATORIAS)
 -- - Tabla 'ubicaciones' para geolocalización de reportes
+-- - Tabla 'historial_estados' para auditoría de cambios de estado
+-- - Tabla 'token_notificaciones' para FCM tokens de Firebase
+-- - Tabla 'mensaje_notificaciones' para plantillas de mensajes
+-- - Tabla 'rechazo_mensajes' para motivos de rechazo
 -- - Campos de auditoría en 'reportes' (cierre, rechazo, contador)
 -- - Campos de evidencias en 'reportes' (comentario_resolucion)
 -- - Estado RECHAZADO_AUDITO para reintentos
@@ -116,7 +120,41 @@ CREATE TABLE IF NOT EXISTS asignaciones (
   CONSTRAINT fk_asignaciones_tecnico FOREIGN KEY (tecnico_id) REFERENCES tecnicos (id) ON DELETE SET NULL
 );
 
--- 8) Índices para optimización de consultas
+-- 8) Historial de Estados (auditoría de cambios)
+CREATE TABLE IF NOT EXISTS historial_estados (
+  id BIGSERIAL PRIMARY KEY,
+  reporte_id BIGINT NOT NULL,
+  estado_anterior VARCHAR(50),
+  estado_nuevo VARCHAR(50) NOT NULL,
+  fecha_cambio TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+  CONSTRAINT fk_historial_reporte FOREIGN KEY (reporte_id) REFERENCES reportes (id) ON DELETE CASCADE
+);
+
+-- 9) Token de Notificaciones (FCM tokens para Firebase)
+CREATE TABLE IF NOT EXISTS token_notificaciones (
+  id BIGSERIAL PRIMARY KEY,
+  cuenta_id BIGINT NOT NULL UNIQUE,
+  token VARCHAR(512) NOT NULL,
+  CONSTRAINT fk_token_cuenta FOREIGN KEY (cuenta_id) REFERENCES cuentas (id) ON DELETE CASCADE
+);
+
+-- 10) Mensajes de Notificación (plantillas por estado)
+CREATE TABLE IF NOT EXISTS mensaje_notificaciones (
+  id BIGSERIAL PRIMARY KEY,
+  estado VARCHAR(50) NOT NULL UNIQUE,
+  mensaje VARCHAR(500) NOT NULL
+);
+
+-- 11) Mensajes de Rechazo (motivos de rechazo de reportes)
+CREATE TABLE IF NOT EXISTS rechazo_mensajes (
+  id BIGSERIAL PRIMARY KEY,
+  reporte_id BIGINT NOT NULL,
+  motivo VARCHAR(1000) NOT NULL,
+  fecha_rechazo TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+  CONSTRAINT fk_rechazo_reporte FOREIGN KEY (reporte_id) REFERENCES reportes (id) ON DELETE CASCADE
+);
+
+-- 12) Índices para optimización de consultas
 -- Índice parcial: impedir más de una asignación abierta por reporte
 CREATE UNIQUE INDEX IF NOT EXISTS ux_asignaciones_reporte_abierta ON asignaciones (reporte_id) WHERE fecha_cierre IS NULL;
 
@@ -135,12 +173,26 @@ CREATE INDEX IF NOT EXISTS idx_asignaciones_operador_id ON asignaciones (operado
 CREATE INDEX IF NOT EXISTS idx_fotos_reporte_id ON fotos (reporte_id);
 CREATE INDEX IF NOT EXISTS idx_fotos_tipo ON fotos (tipo);
 
+-- Índices para historial de estados (auditoría)
+CREATE INDEX IF NOT EXISTS idx_historial_reporte_id ON historial_estados (reporte_id);
+CREATE INDEX IF NOT EXISTS idx_historial_fecha_cambio ON historial_estados (fecha_cambio DESC);
+
+-- Índices para notificaciones
+CREATE INDEX IF NOT EXISTS idx_token_cuenta_id ON token_notificaciones (cuenta_id);
+
+-- Índices para rechazo
+CREATE INDEX IF NOT EXISTS idx_rechazo_reporte_id ON rechazo_mensajes (reporte_id);
+
 
 -- ============================================
 -- SCRIPTS DE LIMPIEZA (usar con precaución)
 -- ============================================
 -- Descomenta estas líneas para eliminar todas las tablas y empezar desde cero
 /*
+DROP TABLE IF EXISTS rechazo_mensajes CASCADE;
+DROP TABLE IF EXISTS mensaje_notificaciones CASCADE;
+DROP TABLE IF EXISTS token_notificaciones CASCADE;
+DROP TABLE IF EXISTS historial_estados CASCADE;
 DROP TABLE IF EXISTS fotos CASCADE;
 DROP TABLE IF EXISTS asignaciones CASCADE;
 DROP TABLE IF EXISTS reportes CASCADE;
@@ -182,4 +234,26 @@ TIPOS DE FOTO:
 - INICIAL: Foto antes de iniciar el trabajo
 - PROCESO: Foto durante el trabajo
 - FINAL: Foto al completar el trabajo
+
+NUEVAS TABLAS DEL MERGE (Main Branch):
+
+historial_estados:
+- Registra CADA cambio de estado del reporte (auditoría completa)
+- Campos: reporte_id, estado_anterior, estado_nuevo, fecha_cambio
+- Se crea automáticamente cuando se llama a reporteService.cambiarEstadoReporte()
+
+token_notificaciones:
+- Almacena tokens FCM de Firebase para push notifications
+- Relación 1:1 con cuentas (un token por usuario)
+- Se actualiza cuando el usuario registra su dispositivo
+
+mensaje_notificaciones:
+- Plantillas de mensajes personalizados por estado
+- Relación 1:1 con EstadoReporte (un mensaje por estado)
+- Ejemplo: RESUELTA → "Tu reporte fue resuelto"
+
+rechazo_mensajes:
+- Almacena motivos de rechazo de reportes
+- Complementa el campo comentario_rechazo en reportes
+- Permite historial de rechazos detallado
 */

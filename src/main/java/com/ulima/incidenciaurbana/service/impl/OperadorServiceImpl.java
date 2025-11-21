@@ -12,6 +12,7 @@ import com.ulima.incidenciaurbana.repository.CuentaRepository;
 import com.ulima.incidenciaurbana.repository.FotoRepository;
 import com.ulima.incidenciaurbana.repository.ReporteRepository;
 import com.ulima.incidenciaurbana.service.IOperadorService;
+import com.ulima.incidenciaurbana.service.IReporteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -31,16 +32,19 @@ public class OperadorServiceImpl implements IOperadorService {
     private final ReporteRepository reporteRepository;
     private final CuentaRepository cuentaRepository;
     private final FotoRepository fotoRepository;
+    private final IReporteService reporteService;
 
     private static final int PAGE_SIZE = 10;
 
     @Autowired
     public OperadorServiceImpl(ReporteRepository reporteRepository,
             CuentaRepository cuentaRepository,
-            FotoRepository fotoRepository) {
+            FotoRepository fotoRepository,
+            IReporteService reporteService) {
         this.reporteRepository = reporteRepository;
         this.cuentaRepository = cuentaRepository;
         this.fotoRepository = fotoRepository;
+        this.reporteService = reporteService;
     }
 
     @Override
@@ -118,12 +122,18 @@ public class OperadorServiceImpl implements IOperadorService {
         }
 
         // Actualizar campos de cierre
-        reporte.setEstado(EstadoReporte.CERRADA);
         reporte.setComentarioCierre(comentarioCierre);
         reporte.setFechaCierre(LocalDateTime.now());
         reporte.setOperadorCierre(operador);
-
         reporte = reporteRepository.save(reporte);
+
+        // Cambiar estado a CERRADA (delegando a ReporteService)
+        // Esto garantiza que se registre en HistorialEstado y se envíe notificación
+        reporteService.cambiarEstadoReporte(reporteId, EstadoReporte.CERRADA);
+
+        // Recargar reporte actualizado
+        reporte = reporteRepository.findById(reporteId)
+                .orElseThrow(() -> new RuntimeException("Error al recargar reporte"));
         return convertirADTO(reporte);
     }
 
@@ -175,18 +185,27 @@ public class OperadorServiceImpl implements IOperadorService {
         reporte.setFechaRechazo(LocalDateTime.now());
         reporte.setOperadorRechazo(operador);
 
-        // Si se alcanzó el máximo de rechazos, cerrar definitivamente a RECHAZADO
+        // Determinar el estado según contador de rechazos
+        EstadoReporte nuevoEstado;
         if (contadorRechazos >= MAX_RECHAZOS) {
             // CIERRE DEFINITIVO: Estado final sin reintentos
-            reporte.setEstado(EstadoReporte.RECHAZADO);
+            nuevoEstado = EstadoReporte.RECHAZADO;
             // No incrementar contador (ya alcanzó máximo)
         } else {
             // RECHAZO TEMPORAL: Permite reintentos (RESUELTA → RECHAZADO_AUDITO)
-            reporte.setEstado(EstadoReporte.RECHAZADO_AUDITO);
+            nuevoEstado = EstadoReporte.RECHAZADO_AUDITO;
             reporte.setContadorRechazos(contadorRechazos + 1);
         }
 
         reporte = reporteRepository.save(reporte);
+
+        // Cambiar estado (delegando a ReporteService)
+        // Esto garantiza que se registre en HistorialEstado y se envíe notificación
+        reporteService.cambiarEstadoReporte(reporteId, nuevoEstado);
+
+        // Recargar reporte actualizado
+        reporte = reporteRepository.findById(reporteId)
+                .orElseThrow(() -> new RuntimeException("Error al recargar reporte"));
         return convertirADTO(reporte);
     }
 

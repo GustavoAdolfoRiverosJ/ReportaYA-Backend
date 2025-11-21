@@ -1,12 +1,16 @@
 -- ==========================================
 -- Script de Datos de Prueba - ReportaYA
--- Versión: 3.0
--- Fecha: 20 de noviembre de 2025
--- Descripción: Reportes en estado REVISION para testing completo
+-- Versión: 4.0
+-- Fecha: 21 de noviembre de 2025
+-- Descripción: Reportes en estado REVISION + datos de Historial y Notificaciones
 -- ==========================================
 
 -- Limpia todas las tablas en orden correcto
 TRUNCATE TABLE
+  rechazo_mensajes,
+  mensaje_notificaciones,
+  token_notificaciones,
+  historial_estados,
   fotos,
   asignaciones,
   reportes,
@@ -148,6 +152,46 @@ INSERT INTO fotos (reporte_id, url, tipo, descripcion, fecha_carga) VALUES
 (6, 'uploads/fotos/reporte-6-inicial-002.jpg', 'INICIAL', 'Vista general del crucero sin señalización', NOW());
 
 -- ==========================================
+-- HISTORIAL DE ESTADOS (registros iniciales)
+-- ==========================================
+
+-- Cada reporte tiene un registro inicial: null → REVISION
+INSERT INTO historial_estados (reporte_id, estado_anterior, estado_nuevo, fecha_cambio) VALUES
+(1, NULL, 'PENDIENTE', NOW() - INTERVAL '2 days'),
+(1, 'PENDIENTE', 'REVISION', NOW() - INTERVAL '1 day'),
+(2, NULL, 'PENDIENTE', NOW() - INTERVAL '2 days'),
+(2, 'PENDIENTE', 'REVISION', NOW() - INTERVAL '1 day'),
+(3, NULL, 'PENDIENTE', NOW() - INTERVAL '2 days'),
+(3, 'PENDIENTE', 'REVISION', NOW() - INTERVAL '1 day'),
+(4, NULL, 'PENDIENTE', NOW() - INTERVAL '2 days'),
+(4, 'PENDIENTE', 'REVISION', NOW() - INTERVAL '1 day'),
+(5, NULL, 'PENDIENTE', NOW() - INTERVAL '2 days'),
+(5, 'PENDIENTE', 'REVISION', NOW() - INTERVAL '1 day'),
+(6, NULL, 'PENDIENTE', NOW() - INTERVAL '2 days'),
+(6, 'PENDIENTE', 'REVISION', NOW() - INTERVAL '1 day');
+
+-- ==========================================
+-- TOKENS DE NOTIFICACIONES (FCM)
+-- ==========================================
+
+-- Registrar tokens FCM para ciudadanos (simulados)
+INSERT INTO token_notificaciones (cuenta_id, token) VALUES
+((SELECT id FROM ciudadanos LIMIT 1), 'fcm_token_ciudadano_carlos_12345');
+
+-- ==========================================
+-- MENSAJES DE NOTIFICACIÓN (Plantillas)
+-- ==========================================
+
+INSERT INTO mensaje_notificaciones (estado, mensaje) VALUES
+('PENDIENTE', 'Tu reporte ha sido creado y está pendiente de revisión'),
+('REVISION', 'Tu reporte está siendo revisado por un operador municipal'),
+('PROCESO', 'Un técnico ha sido asignado y está trabajando en tu reporte'),
+('RESUELTA', 'Tu reporte ha sido resuelto. Está en proceso de auditoría'),
+('CERRADA', 'Tu reporte ha sido cerrado exitosamente. ¡Gracias por tu colaboración!'),
+('RECHAZADO_AUDITO', 'Tu reporte requiere correcciones. El técnico puede reintentar'),
+('RECHAZADO', 'Tu reporte ha sido rechazado definitivamente');
+
+-- ==========================================
 -- CONSULTAS DE VERIFICACIÓN
 -- ==========================================
 
@@ -178,3 +222,26 @@ FROM reportes r
 LEFT JOIN fotos f ON f.reporte_id = r.id
 GROUP BY r.id, r.titulo
 ORDER BY r.id;
+
+SELECT '=== HISTORIAL DE ESTADOS ===' AS seccion;
+SELECT h.id, h.reporte_id, h.estado_anterior, h.estado_nuevo, h.fecha_cambio
+FROM historial_estados h
+ORDER BY h.reporte_id, h.fecha_cambio;
+
+SELECT '=== TOKENS DE NOTIFICACIÓN ===' AS seccion;
+SELECT t.id, t.cuenta_id, LEFT(t.token, 30) || '...' AS token_preview
+FROM token_notificaciones t;
+
+SELECT '=== MENSAJES DE NOTIFICACIÓN ===' AS seccion;
+SELECT m.estado, m.mensaje
+FROM mensaje_notificaciones m
+ORDER BY 
+  CASE m.estado
+    WHEN 'PENDIENTE' THEN 1
+    WHEN 'REVISION' THEN 2
+    WHEN 'PROCESO' THEN 3
+    WHEN 'RESUELTA' THEN 4
+    WHEN 'CERRADA' THEN 5
+    WHEN 'RECHAZADO_AUDITO' THEN 6
+    WHEN 'RECHAZADO' THEN 7
+  END;

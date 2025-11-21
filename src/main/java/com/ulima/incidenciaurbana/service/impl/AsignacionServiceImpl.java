@@ -11,6 +11,7 @@ import com.ulima.incidenciaurbana.repository.AsignacionRepository;
 import com.ulima.incidenciaurbana.repository.CuentaRepository;
 import com.ulima.incidenciaurbana.repository.ReporteRepository;
 import com.ulima.incidenciaurbana.service.IAsignacionService;
+import com.ulima.incidenciaurbana.service.IReporteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,18 +23,20 @@ public class AsignacionServiceImpl implements IAsignacionService {
         private final AsignacionRepository asignacionRepository;
         private final ReporteRepository reporteRepository;
         private final CuentaRepository cuentaRepository;
+        private final IReporteService reporteService;
 
         @Autowired
         public AsignacionServiceImpl(AsignacionRepository asignacionRepository,
                         ReporteRepository reporteRepository,
-                        CuentaRepository cuentaRepository) {
+                        CuentaRepository cuentaRepository,
+                        IReporteService reporteService) {
                 this.asignacionRepository = asignacionRepository;
                 this.reporteRepository = reporteRepository;
                 this.cuentaRepository = cuentaRepository;
+                this.reporteService = reporteService;
         }
 
         @Override
-        @SuppressWarnings("null")
         public AsignacionDTO crearAsignacion(AsignacionDTO asignacionDTO) {
                 // ✅ VALIDACIÓN 1: Prioridad obligatoria
                 if (asignacionDTO.getPrioridad() == null) {
@@ -95,8 +98,12 @@ public class AsignacionServiceImpl implements IAsignacionService {
                 Asignacion asignacion = operador.asignarTecnico(reporte, tecnico);
                 asignacion = asignacionRepository.save(asignacion);
 
-                // ✅ PASO 4: Actualizar estado del reporte a PROCESO
-                reporte.cambiarEstado(EstadoReporte.PROCESO);
+                // ✅ PASO 4: Actualizar estado del reporte a PROCESO (delegando a
+                // ReporteService)
+                // Esto garantiza que se registre en HistorialEstado y se envíe notificación
+                reporteService.cambiarEstadoReporte(reporte.getId(), EstadoReporte.PROCESO);
+
+                // Agregar la asignación al reporte
                 reporte.agregarAsignacion(asignacion);
                 reporteRepository.save(reporte);
 

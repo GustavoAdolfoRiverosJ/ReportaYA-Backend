@@ -24,9 +24,6 @@ public class Ubicacion {
     @Column(name = "fecha_registro")
     private LocalDateTime fechaRegistro;
     
-    @OneToOne(mappedBy = "ubicacion")
-    private Reporte reporte;
-    
     // Constructors
     public Ubicacion() {
         this.fechaRegistro = LocalDateTime.now();
@@ -82,14 +79,6 @@ public class Ubicacion {
     
     public void setFechaRegistro(LocalDateTime fechaRegistro) {
         this.fechaRegistro = fechaRegistro;
-    }
-    
-    public Reporte getReporte() {
-        return reporte;
-    }
-    
-    public void setReporte(Reporte reporte) {
-        this.reporte = reporte;
     }
     
     @Override

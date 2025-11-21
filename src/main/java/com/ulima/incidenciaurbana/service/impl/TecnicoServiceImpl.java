@@ -11,6 +11,7 @@ import com.ulima.incidenciaurbana.repository.AsignacionRepository;
 import com.ulima.incidenciaurbana.repository.FotoRepository;
 import com.ulima.incidenciaurbana.repository.ReporteRepository;
 import com.ulima.incidenciaurbana.service.ITecnicoService;
+import com.ulima.incidenciaurbana.service.IReporteService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,15 +41,18 @@ public class TecnicoServiceImpl implements ITecnicoService {
     private final AsignacionRepository asignacionRepository;
     private final ReporteRepository reporteRepository;
     private final FotoRepository fotoRepository;
+    private final IReporteService reporteService;
     private static final int PAGE_SIZE = 20;
 
     @Autowired
     public TecnicoServiceImpl(AsignacionRepository asignacionRepository,
             ReporteRepository reporteRepository,
-            FotoRepository fotoRepository) {
+            FotoRepository fotoRepository,
+            IReporteService reporteService) {
         this.asignacionRepository = asignacionRepository;
         this.reporteRepository = reporteRepository;
         this.fotoRepository = fotoRepository;
+        this.reporteService = reporteService;
     }
 
     @Override
@@ -159,13 +163,15 @@ public class TecnicoServiceImpl implements ITecnicoService {
 
         // PASO 2: Actualizar comentario de resolución
         reporte.setComentarioResolucion(request.getComentarioResolucion());
-
-        // PASO 3: Cambiar estado a RESUELTA
-        reporte.setEstado(EstadoReporte.RESUELTA);
-        reporte.setFechaActualizacion(LocalDateTime.now());
-
-        // Guardar reporte actualizado
         reporte = reporteRepository.save(reporte);
+
+        // PASO 3: Cambiar estado a RESUELTA (delegando a ReporteService)
+        // Esto garantiza que se registre en HistorialEstado y se envíe notificación
+        reporteService.cambiarEstadoReporte(reporte.getId(), EstadoReporte.RESUELTA);
+
+        // Recargar reporte actualizado
+        reporte = reporteRepository.findById(reporte.getId())
+                .orElseThrow(() -> new RuntimeException("Error al recargar reporte"));
 
         return convertirADTO(reporte);
     }
