@@ -27,19 +27,7 @@ public class TecnicoController {
 
     /**
      * GET /api/tecnicos/{id}/reportes?estado=PROCESO&page=0
-     * 
-     * Lista los reportes asignados al técnico filtrados por estado
-     * 
-     * Estados permitidos:
-     * - PROCESO: Reportes activos que el técnico está trabajando
-     * - RESUELTA: Reportes que el técnico completó y están en auditoría
-     * - RECHAZADO_AUDITO: Reportes rechazados que el técnico puede reintentar
-     * 
-     * Uso: El técnico puede filtrar por estado para ver su lista de actividades
-     * - GET /api/tecnicos/2/reportes?estado=PROCESO → Ver reportes activos
-     * - GET /api/tecnicos/2/reportes?estado=RECHAZADO_AUDITO → Ver rechazados para
-     * reintentar
-     * - GET /api/tecnicos/2/reportes?estado=RESUELTA → Ver completados en auditoría
+     * Lista reportes asignados filtrados por estado
      */
     @GetMapping("/{id}/reportes")
     public ResponseEntity<Page<ReporteDTO>> obtenerReportesAsignados(
@@ -51,5 +39,40 @@ public class TecnicoController {
         return ResponseEntity.ok(reportes);
     }
 
-   
+    /**
+     * PATCH /api/tecnicos/{id}/reportes/{reporteId}/completar
+     * Completa un reporte con fotos y comentario
+     */
+    @PatchMapping("/{id}/reportes/{reporteId}/completar")
+    public ResponseEntity<?> completarReporte(
+            @PathVariable Long id,
+            @PathVariable Long reporteId,
+            @Valid @RequestBody CompletarReporteRequest request) {
+
+        try {
+            ReporteDTO reporteDTO = tecnicoService.completarReporte(id, reporteId, request);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("mensaje", "Reporte completado exitosamente y marcado como RESUELTA");
+            response.put("reporte", reporteDTO);
+            response.put("fotosAdjuntadas", request.getFotos().size());
+            response.put("estadoFinal", "RESUELTA");
+            response.put("proximoPaso",
+                    "El operador municipal puede revisar el reporte en estado RESUELTA para auditoría");
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Validación fallida");
+            error.put("mensaje", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Error al completar reporte");
+            error.put("mensaje", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
 }

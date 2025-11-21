@@ -39,9 +39,6 @@ public class TecnicoServiceImpl implements ITecnicoService {
     private final ReporteRepository reporteRepository;
     private final FotoRepository fotoRepository;
     private static final int PAGE_SIZE = 20;
-    // DEPRECATED: MIN_COMENTARIO_LENGTH y MAX_COMENTARIO_LENGTH ya no se usan
-    // (fueron eliminados cuando se consolidó en completarReporte)
-    private static final int MAX_RECHAZOS_AUDITO = 3;
 
     @Autowired
     public TecnicoServiceImpl(AsignacionRepository asignacionRepository,
@@ -83,16 +80,89 @@ public class TecnicoServiceImpl implements ITecnicoService {
         }
     }
 
-    // ===== DEPRECATED METHODS (CONSOLIDATED INTO completarReporte) =====
-    // Los métodos actualizarComentarioResolucion() y marcarResuelta() han sido
-    // reemplazados por completarReporte() que ejecuta todo atómicamente en una
-    // sola transacción. Estos métodos se eliminaron para evitar duplicación.
-    //
-    // NOTA: reintentarReporte() también fue eliminado (22 NOV 2025)
-    // porque completarReporte() ya acepta directamente RECHAZADO_AUDITO → RESUELTA
-
+    @Override
+    @Transactional
     public ReporteDTO completarReporte(Long tecnicoId, Long reporteId, CompletarReporteRequest request) {
-        throw new UnsupportedOperationException("Implementación eliminada intencionalmente");
+        // VALIDACIÓN 1: Reporte existe
+        Reporte reporte = reporteRepository.findById(reporteId)
+                .orElseThrow(() -> new IllegalArgumentException("Reporte no encontrado"));
+
+        // VALIDACIÓN 2: Reporte está en estado PROCESO o RECHAZADO_AUDITO
+        // Permite tanto resolución inicial como reintento después de rechazo
+        if (reporte.getEstado() != EstadoReporte.PROCESO &&
+                reporte.getEstado() != EstadoReporte.RECHAZADO_AUDITO) {
+            throw new IllegalArgumentException(
+                    "El reporte debe estar en estado PROCESO o RECHAZADO_AUDITO para completarlo. Estado actual: "
+                            + reporte.getEstado());
+        }
+
+        // VALIDACIÓN 3: Técnico existe y es asignado al reporte
+        // Busca asignación en cualquiera de los dos estados (PROCESO o
+        // RECHAZADO_AUDITO)
+        Optional<Asignacion> asignacionOptional = asignacionRepository
+                .findByReporteAndEstado(reporte, EstadoReporte.PROCESO)
+                .stream()
+                .findFirst();
+
+        if (!asignacionOptional.isPresent()) {
+            asignacionOptional = asignacionRepository.findByReporteAndEstado(reporte, EstadoReporte.RECHAZADO_AUDITO)
+                    .stream()
+                    .findFirst();
+        }
+
+        Asignacion asignacion = asignacionOptional
+                .orElseThrow(() -> new IllegalArgumentException("No hay asignación activa para este reporte"));
+
+        if (asignacion.getTecnico() == null || !asignacion.getTecnico().getId().equals(tecnicoId)) {
+            throw new IllegalArgumentException("Solo el técnico asignado puede completar el reporte");
+        }
+
+        // PASO 1: Guardar fotos desde base64
+        try {
+            for (CompletarReporteRequest.FotoRequestInline fotoRequest : request.getFotos()) {
+                // Decodificar base64
+                byte[] decodedBytes = Base64.getDecoder().decode(fotoRequest.getArchivoBase64());
+
+                // Determinar extensión
+                String extension = determinarExtensionFoto(decodedBytes);
+                String nombreArchivo = "reporte-" + reporteId + "-" + UUID.randomUUID() + "." + extension;
+
+                // Crear directorio si no existe
+                Path dirPath = Paths.get("uploads/fotos");
+                Files.createDirectories(dirPath);
+
+                // Guardar archivo
+                Path filePath = dirPath.resolve(nombreArchivo);
+                Files.write(filePath, decodedBytes);
+
+                // Crear entidad Foto
+                Foto foto = new Foto();
+                foto.setReporte(reporte);
+                foto.setUrl("uploads/fotos/" + nombreArchivo);
+                foto.setTipo(TipoFoto.valueOf(fotoRequest.getTipo()));
+                foto.setDescripcion(fotoRequest.getDescripcion());
+                foto.setFechaCarga(LocalDateTime.now());
+
+                // Guardar en BD
+                fotoRepository.save(foto);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Error al guardar fotos: " + e.getMessage(), e);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Tipo de foto inválido: " + e.getMessage());
+        }
+
+        // PASO 2: Actualizar comentario de resolución
+        reporte.setComentarioResolucion(request.getComentarioResolucion());
+
+        // PASO 3: Cambiar estado a RESUELTA
+        reporte.setEstado(EstadoReporte.RESUELTA);
+        reporte.setFechaActualizacion(LocalDateTime.now());
+
+        // Guardar reporte actualizado
+        reporte = reporteRepository.save(reporte);
+
+        return convertirADTO(reporte);
     }
 
     private ReporteDTO convertirADTO(Reporte reporte) {
