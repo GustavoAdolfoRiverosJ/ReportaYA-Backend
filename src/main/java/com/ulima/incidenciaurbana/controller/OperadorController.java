@@ -64,15 +64,7 @@ public class OperadorController {
 
     /**
      * POST /api/operador/reportes/{id}/rechazar-audito
-     * Rechaza un reporte con lógica inteligente de cierre automático
-     * 
-     * Comportamiento:
-     * - Si contador < 3: RESUELTA → RECHAZADO_AUDITO (permite reintentos)
-     * - Si contador >= 3: RESUELTA → RECHAZADO (cierre definitivo automático)
-     *
-     * @param id      el ID del reporte
-     * @param request contiene operadorId y comentarioRechazo
-     * @return ReporteDTO actualizado (RECHAZADO_AUDITO o RECHAZADO según contador)
+     * Rechaza un reporte (auto-cierra si contador >= 3)
      */
     @PostMapping("/reportes/{id}/rechazar-audito")
     public ResponseEntity<?> rechazarAudito(

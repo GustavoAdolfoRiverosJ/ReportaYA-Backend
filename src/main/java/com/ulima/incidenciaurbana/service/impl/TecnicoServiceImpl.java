@@ -19,6 +19,8 @@ import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Collections;
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -54,7 +56,7 @@ public class TecnicoServiceImpl implements ITecnicoService {
         Pageable pageable = PageRequest.of(page, PAGE_SIZE, Sort.by("id").descending());
 
         if (estado == null || estado.trim().isEmpty()) {
-            return new PageImpl<>(List.of(), pageable, 0);
+            return new PageImpl<>(Objects.requireNonNull(Collections.<ReporteDTO>emptyList()), pageable, 0L);
         }
 
         try {
@@ -73,16 +75,19 @@ public class TecnicoServiceImpl implements ITecnicoService {
                     .filter(dto -> dto != null)
                     .collect(Collectors.toList());
 
-            return new PageImpl<>(reportesDTO, pageable, asignaciones.getTotalElements());
+            return new PageImpl<>(Objects.requireNonNull(reportesDTO), pageable, asignaciones.getTotalElements());
         } catch (IllegalArgumentException e) {
             // Estado inválido
-            return new PageImpl<>(List.of(), pageable, 0);
+            return new PageImpl<>(Objects.requireNonNull(Collections.<ReporteDTO>emptyList()), pageable, 0L);
         }
     }
 
     @Override
     @Transactional
     public ReporteDTO completarReporte(Long tecnicoId, Long reporteId, CompletarReporteRequest request) {
+        // VALIDACIÓN 0: Identificador de reporte no nulo
+        Objects.requireNonNull(reporteId, "reporteId no puede ser null");
+
         // VALIDACIÓN 1: Reporte existe
         Reporte reporte = reporteRepository.findById(reporteId)
                 .orElseThrow(() -> new IllegalArgumentException("Reporte no encontrado"));
@@ -113,7 +118,7 @@ public class TecnicoServiceImpl implements ITecnicoService {
         Asignacion asignacion = asignacionOptional
                 .orElseThrow(() -> new IllegalArgumentException("No hay asignación activa para este reporte"));
 
-        if (asignacion.getTecnico() == null || !asignacion.getTecnico().getId().equals(tecnicoId)) {
+        if (asignacion.getTecnico() == null || !Objects.equals(asignacion.getTecnico().getId(), tecnicoId)) {
             throw new IllegalArgumentException("Solo el técnico asignado puede completar el reporte");
         }
 

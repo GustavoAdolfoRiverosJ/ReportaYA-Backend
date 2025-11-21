@@ -16,12 +16,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -66,7 +66,7 @@ public class OperadorServiceImpl implements IOperadorService {
                     .map(this::convertirADTO)
                     .collect(Collectors.toList());
 
-            return new PageImpl<>(reportesPaginados,
+            return new PageImpl<>(Objects.requireNonNull(reportesPaginados),
                     PageRequest.of(p, PAGE_SIZE),
                     todosReportes.size());
         } catch (IllegalArgumentException e) {
