@@ -96,6 +96,10 @@ public class ReporteServiceImpl implements IReporteService {
             reporte.setPrioridad(reporteDTO.getPrioridad());
         }
 
+        if (reporteDTO.getTipoProblema() != null) {
+            reporte.setTipoProblema(reporteDTO.getTipoProblema());
+        }
+
         // Crear y asociar ubicación (ahora es obligatoria)
         Ubicacion ubicacion = convertirDTOAUbicacion(reporteDTO.getUbicacion());
         if (ubicacion == null) {
@@ -163,6 +167,10 @@ public class ReporteServiceImpl implements IReporteService {
 
         if (reporteDTO.getPrioridad() != null) {
             reporte.setPrioridad(reporteDTO.getPrioridad());
+        }
+
+        if (reporteDTO.getTipoProblema() != null) {
+            reporte.setTipoProblema(reporteDTO.getTipoProblema());
         }
 
         // La ubicación es obligatoria, debe estar presente
@@ -301,7 +309,8 @@ public class ReporteServiceImpl implements IReporteService {
                 reporte.getCuenta().getId(),
                 reporte.getCuenta().getPersona().getNombreCompleto(),
                 reporte.getPrioridad(),
-                reporte.getEstado());
+                reporte.getEstado(),
+                reporte.getTipoProblema());
 
         dto.setFechaCreacion(reporte.getFechaCreacion());
         dto.setFechaActualizacion(reporte.getFechaActualizacion());
@@ -404,6 +413,35 @@ public class ReporteServiceImpl implements IReporteService {
             System.err.println("Error al convertir archivo a base64: " + e.getMessage());
             return null;
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReporteDTO> obtenerReportesMapa(EstadoReporte estado,
+            com.ulima.incidenciaurbana.model.TipoProblema tipo, Prioridad prioridad) {
+        org.springframework.data.jpa.domain.Specification<Reporte> spec = (root, query, cb) -> {
+            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
+
+            if (estado != null) {
+                predicates.add(cb.equal(root.get("estado"), estado));
+            }
+            if (tipo != null) {
+                predicates.add(cb.equal(root.get("tipoProblema"), tipo));
+            }
+            if (prioridad != null) {
+                predicates.add(cb.equal(root.get("prioridad"), prioridad));
+            }
+
+            // Fetch join para optimizar
+            root.fetch("ubicacion", jakarta.persistence.criteria.JoinType.LEFT);
+            root.fetch("cuenta", jakarta.persistence.criteria.JoinType.LEFT);
+
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+
+        return reporteRepository.findAll(spec).stream()
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
     }
 
     private Ubicacion convertirDTOAUbicacion(UbicacionDTO dto) {

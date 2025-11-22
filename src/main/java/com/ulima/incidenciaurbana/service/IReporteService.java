@@ -26,4 +26,7 @@ public interface IReporteService {
     ReporteDTO rechazarReporte(Long id, String motivo);
 
     void eliminarReporte(Long id);
+
+    java.util.List<ReporteDTO> obtenerReportesMapa(EstadoReporte estado,
+            com.ulima.incidenciaurbana.model.TipoProblema tipo, Prioridad prioridad);
 }
