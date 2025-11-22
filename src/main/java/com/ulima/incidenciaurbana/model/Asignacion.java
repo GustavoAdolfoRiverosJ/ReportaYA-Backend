@@ -29,6 +29,9 @@ public class Asignacion {
     @Column(name = "fecha_cierre")
     private LocalDateTime fechaCierre;
 
+    @Column(name = "comentario_resolucion", length = 1000)
+    private String comentarioResolucion;
+
     public Asignacion() {
         this.fechaAsignacion = LocalDateTime.now();
     }
@@ -87,6 +90,14 @@ public class Asignacion {
 
     public void setFechaCierre(LocalDateTime fechaCierre) {
         this.fechaCierre = fechaCierre;
+    }
+
+    public String getComentarioResolucion() {
+        return comentarioResolucion;
+    }
+
+    public void setComentarioResolucion(String comentarioResolucion) {
+        this.comentarioResolucion = comentarioResolucion;
     }
 
 }

@@ -6,5 +6,6 @@ public enum EstadoReporte {
     PROCESO,
     RESUELTA,
     CERRADA,
-    RECHAZADO
+    RECHAZADO_AUDITO, // Rechazo de auditoría - técnico puede reintentar
+    RECHAZADO // Rechazo definitivo - sin reintentos
 }

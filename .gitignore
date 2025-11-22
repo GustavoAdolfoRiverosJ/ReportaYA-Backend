@@ -32,6 +32,9 @@ build/
 ### VS Code ###
 .vscode/
 
+.db/
+.doc/
+
 # Logs and temp
 *.log
 hs_err_pid*

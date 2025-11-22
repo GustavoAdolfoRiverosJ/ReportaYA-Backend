@@ -1,29 +1,36 @@
 package com.ulima.incidenciaurbana.dto;
 
+/**
+ * DTO para representar un técnico en respuestas de la API
+ * Se usa para listar técnicos disponibles, asignarles reportes, etc.
+ */
 public class TecnicoDTO {
+
     private Long id;
     private String usuario;
     private String nombres;
     private String apellidos;
-    private String dni;
-    private String telefono;
-    private String correo;
-    private boolean activo;
+    private String email;
+    private String especialidad; // Campo opcional si existe en la entidad Tecnico
 
+    // Constructores
     public TecnicoDTO() {
     }
 
-    public TecnicoDTO(Long id, String usuario, String nombres, String apellidos, String dni, String telefono, String correo, boolean activo) {
+    public TecnicoDTO(Long id, String usuario, String nombres, String apellidos, String email) {
         this.id = id;
         this.usuario = usuario;
         this.nombres = nombres;
         this.apellidos = apellidos;
-        this.dni = dni;
-        this.telefono = telefono;
-        this.correo = correo;
-        this.activo = activo;
+        this.email = email;
     }
 
+    public TecnicoDTO(Long id, String usuario, String nombres, String apellidos, String email, String especialidad) {
+        this(id, usuario, nombres, apellidos, email);
+        this.especialidad = especialidad;
+    }
+
+    // Getters y Setters
     public Long getId() {
         return id;
     }
@@ -56,35 +63,31 @@ public class TecnicoDTO {
         this.apellidos = apellidos;
     }
 
-    public String getDni() {
-        return dni;
+    public String getEmail() {
+        return email;
     }
 
-    public void setDni(String dni) {
-        this.dni = dni;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
-    public String getTelefono() {
-        return telefono;
+    public String getEspecialidad() {
+        return especialidad;
     }
 
-    public void setTelefono(String telefono) {
-        this.telefono = telefono;
+    public void setEspecialidad(String especialidad) {
+        this.especialidad = especialidad;
     }
 
-    public String getCorreo() {
-        return correo;
-    }
-
-    public void setCorreo(String correo) {
-        this.correo = correo;
-    }
-
-    public boolean isActivo() {
-        return activo;
-    }
-
-    public void setActivo(boolean activo) {
-        this.activo = activo;
+    @Override
+    public String toString() {
+        return "TecnicoDTO{" +
+                "id=" + id +
+                ", usuario='" + usuario + '\'' +
+                ", nombres='" + nombres + '\'' +
+                ", apellidos='" + apellidos + '\'' +
+                ", email='" + email + '\'' +
+                ", especialidad='" + especialidad + '\'' +
+                '}';
     }
 }

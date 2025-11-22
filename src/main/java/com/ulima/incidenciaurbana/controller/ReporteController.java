@@ -31,7 +31,6 @@ public class ReporteController {
         }
     }
 
-
     @GetMapping
     public ResponseEntity<org.springframework.data.domain.Page<ReporteDTO>> obtenerTodosReportes(
             @RequestParam(name = "page", defaultValue = "0") int page,
@@ -48,8 +47,17 @@ public class ReporteController {
         return new ResponseEntity<>(reportes, HttpStatus.OK);
     }
 
-    // Operador-specific endpoint removed. Use GET /api/reportes?page={n} instead.
+    @GetMapping("/{id}")
+    public ResponseEntity<ReporteDTO> obtenerReportePorId(@PathVariable Long id) {
+        try {
+            ReporteDTO reporte = reporteService.obtenerReportePorId(id);
+            return new ResponseEntity<>(reporte, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+    }
 
+    // Operador-specific endpoint removed. Use GET /api/reportes?page={n} instead.
 
     @PutMapping("/{id}")
     public ResponseEntity<ReporteDTO> actualizarReporte(

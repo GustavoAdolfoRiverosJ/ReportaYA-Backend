@@ -51,8 +51,9 @@ public class NotificationServiceImpl implements INotificationService {
 
     @Override
     public void enviarNotificacion(Long cuentaId, String titulo, String mensaje) {
-        if (cuentaId == null) return;
-        
+        if (cuentaId == null)
+            return;
+
         Optional<TokenNotificacion> tokenOpt = tokenRepository.findByCuentaId(cuentaId);
         if (tokenOpt.isPresent()) {
             enviarNotificacionAUnToken(tokenOpt.get().getToken(), titulo, mensaje);
@@ -64,6 +65,15 @@ public class NotificationServiceImpl implements INotificationService {
     @Override
     public void enviarNotificacionAUnToken(String token, String titulo, String mensaje) {
         try {
+            // Verificar si Firebase está disponible
+            if (com.google.firebase.FirebaseApp.getApps().isEmpty()) {
+                System.out.println("⚠️  Firebase no disponible. Notificación simulada:");
+                System.out.println("   📱 Token: " + token.substring(0, Math.min(20, token.length())) + "...");
+                System.out.println("   📧 Título: " + titulo);
+                System.out.println("   💬 Mensaje: " + mensaje);
+                return;
+            }
+
             Message message = Message.builder()
                     .setToken(token)
                     .setNotification(Notification.builder()
@@ -73,10 +83,10 @@ public class NotificationServiceImpl implements INotificationService {
                     .build();
 
             String response = FirebaseMessaging.getInstance().send(message);
-            System.out.println("Notificación enviada exitosamente: " + response);
+            System.out.println("✅ Notificación enviada exitosamente: " + response);
         } catch (Exception e) {
-            System.err.println("Error enviando notificación al token " + token + ": " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("⚠️  Error enviando notificación al token " + token + ": " + e.getMessage());
+            System.err.println("   La aplicación continuará funcionando normalmente.");
         }
     }
 }

@@ -16,13 +16,30 @@ public class FirebaseConfig {
     @Bean
     public FirebaseApp firebaseApp() throws IOException {
         if (FirebaseApp.getApps().isEmpty()) {
-            InputStream serviceAccount = new ClassPathResource("firebase-service-account.json").getInputStream();
+            try {
+                ClassPathResource resource = new ClassPathResource("firebase-service-account.json");
 
-            FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .build();
+                // Verificar si el archivo existe
+                if (!resource.exists()) {
+                    System.err.println("⚠️  WARNING: firebase-service-account.json no encontrado.");
+                    System.err.println("⚠️  Las notificaciones Firebase NO estarán disponibles.");
+                    System.err.println("⚠️  La aplicación continuará funcionando sin notificaciones push.");
+                    return null; // Retornar null para permitir que la app inicie
+                }
 
-            return FirebaseApp.initializeApp(options);
+                InputStream serviceAccount = resource.getInputStream();
+
+                FirebaseOptions options = FirebaseOptions.builder()
+                        .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                        .build();
+
+                System.out.println("✅ Firebase inicializado correctamente.");
+                return FirebaseApp.initializeApp(options);
+            } catch (IOException e) {
+                System.err.println("⚠️  ERROR al inicializar Firebase: " + e.getMessage());
+                System.err.println("⚠️  La aplicación continuará sin notificaciones push.");
+                return null;
+            }
         }
         return FirebaseApp.getInstance();
     }
