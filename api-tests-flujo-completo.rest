@@ -141,7 +141,7 @@ Content-Type: {{contentType}}
 POST {{baseUrl}}/reportes/2/rechazar?motivo=Reporte%20duplicado%20o%20invalido
 
 ### 12) Listar técnicos (paginado)
-GET {{baseUrl}}/tecnicos?page=0
+GET {{baseUrl}}/tecnicos
 
 ### 13) Listar todos los reportes (paginado)
 GET {{baseUrl}}/reportes?page=0
