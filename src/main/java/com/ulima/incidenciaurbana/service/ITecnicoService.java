@@ -2,9 +2,18 @@ package com.ulima.incidenciaurbana.service;
 
 import com.ulima.incidenciaurbana.dto.ReporteDTO;
 import com.ulima.incidenciaurbana.dto.CompletarReporteRequest;
+import com.ulima.incidenciaurbana.dto.TecnicoDTO;
 import org.springframework.data.domain.Page;
 
 public interface ITecnicoService {
+
+    /**
+     * Lista todos los técnicos disponibles con paginación
+     * 
+     * @param page Número de página
+     * @return Page de TecnicoDTO
+     */
+    Page<TecnicoDTO> obtenerTodosTecnicos(int page);
 
     /**
      * Lista reportes asignados al técnico

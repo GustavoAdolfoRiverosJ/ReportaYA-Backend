@@ -14,6 +14,7 @@ public class FotoDTO {
     private TipoFoto tipo;
     private String descripcion;
     private LocalDateTime fechaCarga;
+    private String archivoBase64; // Base64 de la imagen para mostrar en apps móviles
 
     // Constructores
     public FotoDTO() {
@@ -74,5 +75,13 @@ public class FotoDTO {
 
     public void setFechaCarga(LocalDateTime fechaCarga) {
         this.fechaCarga = fechaCarga;
+    }
+
+    public String getArchivoBase64() {
+        return archivoBase64;
+    }
+
+    public void setArchivoBase64(String archivoBase64) {
+        this.archivoBase64 = archivoBase64;
     }
 }

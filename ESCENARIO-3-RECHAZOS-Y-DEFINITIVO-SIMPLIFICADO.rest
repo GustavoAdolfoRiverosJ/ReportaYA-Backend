@@ -18,7 +18,7 @@
 @baseUrl = http://localhost:8080/api
 @operadorId = 1
 @tecnicoId = 2
-@reporteId = 1
+@reporteId = 7
 
 ###############################################################################
 # PASO 0: ASIGNAR REPORTE A TÉCNICO

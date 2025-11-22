@@ -2,11 +2,15 @@ package com.ulima.incidenciaurbana.service.impl;
 
 import com.ulima.incidenciaurbana.dto.ReporteDTO;
 import com.ulima.incidenciaurbana.dto.UbicacionDTO;
+import com.ulima.incidenciaurbana.dto.FotoDTO;
 import com.ulima.incidenciaurbana.model.Cuenta;
 import com.ulima.incidenciaurbana.model.EstadoReporte;
 import com.ulima.incidenciaurbana.model.Prioridad;
 import com.ulima.incidenciaurbana.model.Reporte;
 import com.ulima.incidenciaurbana.model.Ubicacion;
+import com.ulima.incidenciaurbana.model.Foto;
+import com.ulima.incidenciaurbana.model.Asignacion;
+import com.ulima.incidenciaurbana.model.Tecnico;
 import com.ulima.incidenciaurbana.repository.CuentaRepository;
 import com.ulima.incidenciaurbana.repository.ReporteRepository;
 import com.ulima.incidenciaurbana.repository.UbicacionRepository;
@@ -301,6 +305,30 @@ public class ReporteServiceImpl implements IReporteService {
             dto.setUbicacion(convertirUbicacionADTO(reporte.getUbicacion()));
         }
 
+        // Mapear fotos con base64
+        if (reporte.getFotos() != null && !reporte.getFotos().isEmpty()) {
+            dto.setFotos(reporte.getFotos().stream()
+                    .map(this::convertirFotoADTO)
+                    .toList());
+        }
+
+        // Mapear comentarioResolucion
+        dto.setComentarioResolucion(reporte.getComentarioResolucion());
+
+        // Mapear técnico asignado (obtener la asignación más reciente)
+        if (reporte.getAsignaciones() != null && !reporte.getAsignaciones().isEmpty()) {
+            // Obtener la última asignación (la más reciente)
+            Asignacion ultimaAsignacion = reporte.getAsignaciones().stream()
+                    .max((a, b) -> a.getFechaAsignacion().compareTo(b.getFechaAsignacion()))
+                    .orElse(null);
+
+            if (ultimaAsignacion != null && ultimaAsignacion.getTecnico() != null) {
+                Tecnico tecnico = ultimaAsignacion.getTecnico();
+                dto.setTecnicoId(tecnico.getId());
+                dto.setTecnicoNombre(tecnico.getPersona().getNombreCompleto());
+            }
+        }
+
         return dto;
     }
 
@@ -311,6 +339,42 @@ public class ReporteServiceImpl implements IReporteService {
                 ubicacion.getLongitud(),
                 ubicacion.getDireccion(),
                 ubicacion.getFechaRegistro());
+    }
+
+    private FotoDTO convertirFotoADTO(Foto foto) {
+        FotoDTO fotoDTO = new FotoDTO();
+        fotoDTO.setId(foto.getId());
+        fotoDTO.setReporteId(foto.getReporte().getId());
+        fotoDTO.setUrl(foto.getUrl());
+        fotoDTO.setTipo(foto.getTipo());
+        fotoDTO.setDescripcion(foto.getDescripcion());
+        fotoDTO.setFechaCarga(foto.getFechaCarga());
+
+        // Convertir archivo a base64 si existe
+        String base64 = archivoABase64(foto.getUrl());
+        fotoDTO.setArchivoBase64(base64);
+
+        return fotoDTO;
+    }
+
+    private String archivoABase64(String urlArchivo) {
+        try {
+            if (urlArchivo == null || urlArchivo.isEmpty()) {
+                return null;
+            }
+
+            java.nio.file.Path rutaArchivo = java.nio.file.Paths.get(urlArchivo);
+            if (!java.nio.file.Files.exists(rutaArchivo)) {
+                System.err.println("Archivo no encontrado: " + urlArchivo);
+                return null;
+            }
+
+            byte[] contenido = java.nio.file.Files.readAllBytes(rutaArchivo);
+            return java.util.Base64.getEncoder().encodeToString(contenido);
+        } catch (Exception e) {
+            System.err.println("Error al convertir archivo a base64: " + e.getMessage());
+            return null;
+        }
     }
 
     private Ubicacion convertirDTOAUbicacion(UbicacionDTO dto) {

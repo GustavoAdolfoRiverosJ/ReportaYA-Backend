@@ -32,6 +32,10 @@ public class ReporteDTO {
 
     private Integer contadorRechazos;
 
+    // Campos de Asignación (Técnico asignado)
+    private Long tecnicoId;
+    private String tecnicoNombre;
+
     // Constructors
     public ReporteDTO() {
     }
@@ -198,5 +202,21 @@ public class ReporteDTO {
 
     public void setContadorRechazos(Integer contadorRechazos) {
         this.contadorRechazos = contadorRechazos;
+    }
+
+    public Long getTecnicoId() {
+        return tecnicoId;
+    }
+
+    public void setTecnicoId(Long tecnicoId) {
+        this.tecnicoId = tecnicoId;
+    }
+
+    public String getTecnicoNombre() {
+        return tecnicoNombre;
+    }
+
+    public void setTecnicoNombre(String tecnicoNombre) {
+        this.tecnicoNombre = tecnicoNombre;
     }
 }

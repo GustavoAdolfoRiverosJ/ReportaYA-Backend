@@ -2,14 +2,17 @@ package com.ulima.incidenciaurbana.service.impl;
 
 import com.ulima.incidenciaurbana.dto.CompletarReporteRequest;
 import com.ulima.incidenciaurbana.dto.ReporteDTO;
+import com.ulima.incidenciaurbana.dto.TecnicoDTO;
 import com.ulima.incidenciaurbana.model.Asignacion;
 import com.ulima.incidenciaurbana.model.EstadoReporte;
 import com.ulima.incidenciaurbana.model.Foto;
 import com.ulima.incidenciaurbana.model.Reporte;
+import com.ulima.incidenciaurbana.model.Tecnico;
 import com.ulima.incidenciaurbana.model.TipoFoto;
 import com.ulima.incidenciaurbana.repository.AsignacionRepository;
 import com.ulima.incidenciaurbana.repository.FotoRepository;
 import com.ulima.incidenciaurbana.repository.ReporteRepository;
+import com.ulima.incidenciaurbana.repository.TecnicoRepository;
 import com.ulima.incidenciaurbana.service.ITecnicoService;
 import com.ulima.incidenciaurbana.service.IReporteService;
 import java.io.IOException;
@@ -42,17 +45,35 @@ public class TecnicoServiceImpl implements ITecnicoService {
     private final ReporteRepository reporteRepository;
     private final FotoRepository fotoRepository;
     private final IReporteService reporteService;
+    private final TecnicoRepository tecnicoRepository;
     private static final int PAGE_SIZE = 20;
 
     @Autowired
     public TecnicoServiceImpl(AsignacionRepository asignacionRepository,
             ReporteRepository reporteRepository,
             FotoRepository fotoRepository,
-            IReporteService reporteService) {
+            IReporteService reporteService,
+            TecnicoRepository tecnicoRepository) {
         this.asignacionRepository = asignacionRepository;
         this.reporteRepository = reporteRepository;
         this.fotoRepository = fotoRepository;
         this.reporteService = reporteService;
+        this.tecnicoRepository = tecnicoRepository;
+    }
+
+    @Override
+    public Page<TecnicoDTO> obtenerTodosTecnicos(int page) {
+        Pageable pageable = PageRequest.of(page, PAGE_SIZE, Sort.by("id").ascending());
+        Page<Tecnico> tecnicos = tecnicoRepository.findAll(pageable);
+
+        return tecnicos.map(tecnico -> new TecnicoDTO(
+                tecnico.getId(),
+                tecnico.getUsuario(),
+                tecnico.getPersona().getNombres(),
+                tecnico.getPersona().getApellidos(),
+                tecnico.getPersona().getCorreo(),
+                null // Sin especialidad por ahora
+        ));
     }
 
     @Override

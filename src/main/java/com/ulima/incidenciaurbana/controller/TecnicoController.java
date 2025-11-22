@@ -2,6 +2,7 @@ package com.ulima.incidenciaurbana.controller;
 
 import com.ulima.incidenciaurbana.dto.ReporteDTO;
 import com.ulima.incidenciaurbana.dto.CompletarReporteRequest;
+import com.ulima.incidenciaurbana.dto.TecnicoDTO;
 import com.ulima.incidenciaurbana.service.ITecnicoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,17 @@ public class TecnicoController {
     @Autowired
     public TecnicoController(ITecnicoService tecnicoService) {
         this.tecnicoService = tecnicoService;
+    }
+
+    /**
+     * GET /api/tecnicos?page=0
+     * Lista todos los técnicos disponibles con paginación
+     */
+    @GetMapping
+    public ResponseEntity<Page<TecnicoDTO>> obtenerTodosTecnicos(
+            @RequestParam(name = "page", defaultValue = "0") int page) {
+        Page<TecnicoDTO> tecnicos = tecnicoService.obtenerTodosTecnicos(page);
+        return ResponseEntity.ok(tecnicos);
     }
 
     /**
