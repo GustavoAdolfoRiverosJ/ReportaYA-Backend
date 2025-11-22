@@ -1,13 +1,24 @@
 package com.ulima.incidenciaurbana.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.ulima.incidenciaurbana.dto.ReporteDTO;
 import com.ulima.incidenciaurbana.model.EstadoReporte;
 import com.ulima.incidenciaurbana.model.Prioridad;
 import com.ulima.incidenciaurbana.service.IReporteService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/reportes")
@@ -31,13 +42,24 @@ public class ReporteController {
         }
     }
 
-
     @GetMapping
     public ResponseEntity<org.springframework.data.domain.Page<ReporteDTO>> obtenerTodosReportes(
             @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "estado", required = false) EstadoReporte estado) {
-        var reportes = reporteService.obtenerTodosReportes(page, estado);
+            @RequestParam(name = "estado", required = false) EstadoReporte estado,
+            @RequestParam(name = "tipo", required = false) String tipo,
+            @RequestParam(name = "prioridad", required = false) Prioridad prioridad) {
+        var reportes = reporteService.obtenerTodosReportes(page, estado, tipo, prioridad);
         return new ResponseEntity<>(reportes, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ReporteDTO> obtenerReportePorId(@PathVariable Long id) {
+        try {
+            ReporteDTO reporte = reporteService.obtenerReportePorId(id);
+            return new ResponseEntity<>(reporte, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
     }
 
     @GetMapping("/cuenta/{cuentaId}")
@@ -47,9 +69,6 @@ public class ReporteController {
         var reportes = reporteService.obtenerReportesPorCuenta(cuentaId, page);
         return new ResponseEntity<>(reportes, HttpStatus.OK);
     }
-
-    // Operador-specific endpoint removed. Use GET /api/reportes?page={n} instead.
-
 
     @PutMapping("/{id}")
     public ResponseEntity<ReporteDTO> actualizarReporte(

@@ -1,10 +1,25 @@
 package com.ulima.incidenciaurbana.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "reportes")
@@ -19,6 +34,12 @@ public class Reporte {
 
     @Column(nullable = false, length = 1000)
     private String descripcion;
+
+    @Column(name = "tipo")
+    private String tipo;
+
+    @Column(name = "url_foto")
+    private String urlFoto;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cuenta_id", nullable = false)
@@ -36,7 +57,7 @@ public class Reporte {
 
     @Column(name = "fecha_actualizacion")
     private LocalDateTime fechaActualizacion;
-    
+
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ubicacion_id", referencedColumnName = "id", nullable = false)
     private Ubicacion ubicacion;
@@ -116,6 +137,22 @@ public class Reporte {
         this.descripcion = descripcion;
     }
 
+    public String getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
+    }
+
+    public String getUrlFoto() {
+        return urlFoto;
+    }
+
+    public void setUrlFoto(String urlFoto) {
+        this.urlFoto = urlFoto;
+    }
+
     public Cuenta getCuenta() {
         return cuenta;
     }
@@ -163,11 +200,11 @@ public class Reporte {
     public void setAsignaciones(List<Asignacion> asignaciones) {
         this.asignaciones = asignaciones;
     }
-    
+
     public Ubicacion getUbicacion() {
         return ubicacion;
     }
-    
+
     public void setUbicacion(Ubicacion ubicacion) {
         this.ubicacion = ubicacion;
     }

@@ -38,17 +38,17 @@ public class ReporteServiceImpl implements IReporteService {
     private final INotificationService notificationService;
     private final RechazoMensajeRepository rechazoMensajeRepository;
     private final MensajeNotificacionRepository mensajeNotificacionRepository;
-    
+
     private static final int PAGE_SIZE = 10;
 
     @Autowired
-    public ReporteServiceImpl(ReporteRepository reporteRepository, 
-                              CuentaRepository cuentaRepository, 
-                              UbicacionRepository ubicacionRepository,
-                              HistorialEstadoRepository historialEstadoRepository,
-                              INotificationService notificationService,
-                              RechazoMensajeRepository rechazoMensajeRepository,
-                              MensajeNotificacionRepository mensajeNotificacionRepository) {
+    public ReporteServiceImpl(ReporteRepository reporteRepository,
+            CuentaRepository cuentaRepository,
+            UbicacionRepository ubicacionRepository,
+            HistorialEstadoRepository historialEstadoRepository,
+            INotificationService notificationService,
+            RechazoMensajeRepository rechazoMensajeRepository,
+            MensajeNotificacionRepository mensajeNotificacionRepository) {
         this.reporteRepository = reporteRepository;
         this.cuentaRepository = cuentaRepository;
         this.ubicacionRepository = ubicacionRepository;
@@ -60,73 +60,63 @@ public class ReporteServiceImpl implements IReporteService {
 
     @Override
     public ReporteDTO crearReporte(ReporteDTO reporteDTO) {
-        // Validar que la ubicación sea obligatoria
         if (reporteDTO.getUbicacion() == null) {
             throw new RuntimeException("La ubicación es obligatoria para crear un reporte");
         }
-        
-        // Validar que la ubicación tenga latitud y longitud
+
         if (reporteDTO.getUbicacion().getLatitud() == null || reporteDTO.getUbicacion().getLongitud() == null) {
             throw new RuntimeException("La latitud y longitud son obligatorias en la ubicación");
         }
-        
-        if (reporteDTO.getCuentaId() == null) {
-            throw new RuntimeException("El ID de la cuenta es obligatorio");
-        }
-        long cuentaId = reporteDTO.getCuentaId();
-        Cuenta cuenta = cuentaRepository.findById(cuentaId)
-                .orElseThrow(() -> new RuntimeException("Cuenta no encontrada con id: " + cuentaId));
 
-        Reporte reporte = new Reporte(
-                reporteDTO.getTitulo(),
-                reporteDTO.getDescripcion(),
-                cuenta);
+        Cuenta cuenta = cuentaRepository.findById(reporteDTO.getCuentaId())
+                .orElseThrow(() -> new RuntimeException("Cuenta no encontrada"));
 
-        if (reporteDTO.getPrioridad() != null) {
-            reporte.setPrioridad(reporteDTO.getPrioridad());
-        }
-        
-        // Crear y asociar ubicación (ahora es obligatoria)
         Ubicacion ubicacion = convertirDTOAUbicacion(reporteDTO.getUbicacion());
-        if (ubicacion == null) {
-            throw new RuntimeException("Error al crear la ubicación");
-        }
         ubicacion = ubicacionRepository.save(ubicacion);
-        reporte.setUbicacion(ubicacion);
 
-        cuenta.crearReporte(reporte);
+        Reporte reporte = new Reporte();
+        reporte.setTitulo(reporteDTO.getTitulo());
+        reporte.setDescripcion(reporteDTO.getDescripcion());
+        reporte.setTipo(reporteDTO.getTipo());
+        reporte.setUrlFoto(reporteDTO.getUrlFoto());
+        reporte.setPrioridad(Prioridad.MEDIA);
+        reporte.setEstado(EstadoReporte.PENDIENTE);
+        reporte.setUbicacion(ubicacion);
+        reporte.setCuenta(cuenta);
+
         reporte = reporteRepository.save(reporte);
-        
-        // Guardar historial inicial
+
         HistorialEstado historial = new HistorialEstado(reporte, null, reporte.getEstado());
         historialEstadoRepository.save(historial);
-        
+
         return convertirADTO(reporte);
     }
 
-
     @Override
     @Transactional(readOnly = true)
-    public Page<ReporteDTO> obtenerTodosReportes(int page, EstadoReporte estado) {
+    public Page<ReporteDTO> obtenerTodosReportes(int page, EstadoReporte estado, String tipo, Prioridad prioridad) {
         int p = Math.max(0, page);
         PageRequest pageRequest = PageRequest.of(p, PAGE_SIZE, Sort.by("fechaCreacion").descending());
-        
-        if (estado != null) {
-            return reporteRepository.findByEstado(estado, pageRequest)
-                    .map(this::convertirADTO);
-        }
-        
-        return reporteRepository.findAll(pageRequest)
-            .map(this::convertirADTO);
-    }
 
+        return reporteRepository.findByFilters(estado, tipo, prioridad, pageRequest)
+                .map(this::convertirADTO);
+    }
 
     @Override
     @Transactional(readOnly = true)
     public Page<ReporteDTO> obtenerReportesPorCuenta(Long cuentaId, int page) {
         int p = Math.max(0, page);
-    return reporteRepository.findByCuentaId(cuentaId, PageRequest.of(p, PAGE_SIZE, Sort.by("fechaCreacion").descending()))
-        .map(this::convertirADTO);
+        return reporteRepository
+                .findByCuentaId(cuentaId, PageRequest.of(p, PAGE_SIZE, Sort.by("fechaCreacion").descending()))
+                .map(this::convertirADTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ReporteDTO obtenerReportePorId(Long id) {
+        Reporte reporte = reporteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + id));
+        return convertirADTO(reporte);
     }
 
     @Override
@@ -134,9 +124,8 @@ public class ReporteServiceImpl implements IReporteService {
         if (id == null) {
             throw new RuntimeException("El ID del reporte es obligatorio");
         }
-        long reporteId = id;
-        Reporte reporte = reporteRepository.findById(reporteId)
-                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + reporteId));
+        Reporte reporte = reporteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + id));
 
         reporte.setTitulo(reporteDTO.getTitulo());
         reporte.setDescripcion(reporteDTO.getDescripcion());
@@ -144,18 +133,15 @@ public class ReporteServiceImpl implements IReporteService {
         if (reporteDTO.getPrioridad() != null) {
             reporte.setPrioridad(reporteDTO.getPrioridad());
         }
-        
-        // La ubicación es obligatoria, debe estar presente
+
         if (reporteDTO.getUbicacion() == null) {
             throw new RuntimeException("La ubicación es obligatoria. No se puede actualizar un reporte sin ubicación");
         }
-        
-        // Validar que la ubicación tenga latitud y longitud
+
         if (reporteDTO.getUbicacion().getLatitud() == null || reporteDTO.getUbicacion().getLongitud() == null) {
             throw new RuntimeException("La latitud y longitud son obligatorias en la ubicación");
         }
-        
-        // Actualizar ubicación existente
+
         Ubicacion ubicacion = reporte.getUbicacion();
         ubicacion.setLatitud(reporteDTO.getUbicacion().getLatitud());
         ubicacion.setLongitud(reporteDTO.getUbicacion().getLongitud());
@@ -171,35 +157,30 @@ public class ReporteServiceImpl implements IReporteService {
         if (id == null) {
             throw new RuntimeException("El ID del reporte es obligatorio");
         }
-        long reporteId = id;
-        Reporte reporte = reporteRepository.findById(reporteId)
-                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + reporteId));
+        Reporte reporte = reporteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + id));
 
         EstadoReporte estadoAnterior = reporte.getEstado();
-        
-        // Si el estado no cambia, no hacemos nada
+
         if (estadoAnterior == nuevoEstado) {
             return convertirADTO(reporte);
         }
-        
+
         reporte.cambiarEstado(nuevoEstado);
         reporte = reporteRepository.save(reporte);
-        
-        // Guardar historial
+
         HistorialEstado historial = new HistorialEstado(reporte, estadoAnterior, nuevoEstado);
         historialEstadoRepository.save(historial);
-        
-        // Enviar notificación
+
         String mensaje = "El estado de tu reporte '" + reporte.getTitulo() + "' ha cambiado a " + nuevoEstado;
-        
-        // Buscar mensaje personalizado
+
         MensajeNotificacion mensajeNotificacion = mensajeNotificacionRepository.findByEstado(nuevoEstado).orElse(null);
         if (mensajeNotificacion != null) {
             mensaje = mensajeNotificacion.getMensaje();
         }
-        
+
         notificationService.enviarNotificacion(reporte.getCuenta().getId(), "Actualización de Reporte", mensaje);
-        
+
         return convertirADTO(reporte);
     }
 
@@ -208,39 +189,34 @@ public class ReporteServiceImpl implements IReporteService {
         if (id == null) {
             throw new RuntimeException("El ID del reporte es obligatorio");
         }
-        long reporteId = id;
-        Reporte reporte = reporteRepository.findById(reporteId)
-                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + reporteId));
+        Reporte reporte = reporteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + id));
 
         EstadoReporte estadoAnterior = reporte.getEstado();
         EstadoReporte nuevoEstado = EstadoReporte.RECHAZADO;
-        
+
         if (estadoAnterior == nuevoEstado) {
             return convertirADTO(reporte);
         }
-        
+
         reporte.cambiarEstado(nuevoEstado);
         reporte = reporteRepository.save(reporte);
-        
-        // Guardar historial
+
         HistorialEstado historial = new HistorialEstado(reporte, estadoAnterior, nuevoEstado);
         historialEstadoRepository.save(historial);
-        
-        // Guardar motivo de rechazo
+
         RechazoMensaje rechazo = new RechazoMensaje(reporte, motivo);
         rechazoMensajeRepository.save(rechazo);
-        
-        // Enviar notificación
+
         String mensaje = "Tu reporte ha sido rechazado. Motivo: " + motivo;
-        
-        // Buscar mensaje personalizado
+
         MensajeNotificacion mensajeNotificacion = mensajeNotificacionRepository.findByEstado(nuevoEstado).orElse(null);
         if (mensajeNotificacion != null) {
             mensaje = mensajeNotificacion.getMensaje() + ". Motivo: " + motivo;
         }
-        
+
         notificationService.enviarNotificacion(reporte.getCuenta().getId(), "Reporte Rechazado", mensaje);
-        
+
         return convertirADTO(reporte);
     }
 
@@ -249,9 +225,8 @@ public class ReporteServiceImpl implements IReporteService {
         if (id == null) {
             throw new RuntimeException("El ID del reporte es obligatorio");
         }
-        long reporteId = id;
-        Reporte reporte = reporteRepository.findById(reporteId)
-                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + reporteId));
+        Reporte reporte = reporteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reporte no encontrado con id: " + id));
 
         reporte.cambiarPrioridad(nuevaPrioridad);
         reporte = reporteRepository.save(reporte);
@@ -263,14 +238,11 @@ public class ReporteServiceImpl implements IReporteService {
         if (id == null) {
             throw new RuntimeException("El ID del reporte es obligatorio");
         }
-        long reporteId = id;
-        if (!reporteRepository.existsById(reporteId)) {
-            throw new RuntimeException("Reporte no encontrado con id: " + reporteId);
+        if (!reporteRepository.existsById(id)) {
+            throw new RuntimeException("Reporte no encontrado con id: " + id);
         }
-        reporteRepository.deleteById(reporteId);
+        reporteRepository.deleteById(id);
     }
-
-    // Operator-specific paginated view removed; operators use obtenerTodosReportes(page)
 
     private ReporteDTO convertirADTO(Reporte reporte) {
         ReporteDTO dto = new ReporteDTO(
@@ -278,37 +250,37 @@ public class ReporteServiceImpl implements IReporteService {
                 reporte.getTitulo(),
                 reporte.getDescripcion(),
                 reporte.getCuenta().getId(),
-                reporte.getCuenta().getPersona().getNombreCompleto(),
+                reporte.getCuenta().getPersona().getNombres() + " " + reporte.getCuenta().getPersona().getApellidos(),
                 reporte.getPrioridad(),
-                reporte.getEstado());
+                reporte.getEstado(),
+                null,
+                reporte.getFechaCreacion(),
+                reporte.getFechaActualizacion());
 
-        dto.setFechaCreacion(reporte.getFechaCreacion());
-        dto.setFechaActualizacion(reporte.getFechaActualizacion());
-        
-        // Convertir ubicación si existe
+        dto.setTipo(reporte.getTipo());
+        dto.setUrlFoto(reporte.getUrlFoto());
+
         if (reporte.getUbicacion() != null) {
             dto.setUbicacion(convertirUbicacionADTO(reporte.getUbicacion()));
         }
 
         return dto;
     }
-    
+
     private UbicacionDTO convertirUbicacionADTO(Ubicacion ubicacion) {
         return new UbicacionDTO(
-            ubicacion.getId(),
-            ubicacion.getLatitud(),
-            ubicacion.getLongitud(),
-            ubicacion.getDireccion(),
-            ubicacion.getFechaRegistro()
-        );
+                ubicacion.getId(),
+                ubicacion.getLatitud(),
+                ubicacion.getLongitud(),
+                ubicacion.getDireccion(),
+                ubicacion.getFechaRegistro());
     }
-    
+
     private Ubicacion convertirDTOAUbicacion(UbicacionDTO dto) {
         Ubicacion ubicacion = new Ubicacion(
-            dto.getLatitud(),
-            dto.getLongitud(),
-            dto.getDireccion()
-        );
+                dto.getLatitud(),
+                dto.getLongitud(),
+                dto.getDireccion());
         return ubicacion;
     }
 }
