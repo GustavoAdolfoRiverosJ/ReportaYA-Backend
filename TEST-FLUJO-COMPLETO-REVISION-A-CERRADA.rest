@@ -29,7 +29,7 @@
 @ciudadanoId = 3
 @tecnicoId = 2
 @operadorId = 1
-@reporteId = 8
+@reporteId = 3
 
 
 

@@ -11,6 +11,12 @@ import com.ulima.incidenciaurbana.model.Ubicacion;
 import com.ulima.incidenciaurbana.model.Foto;
 import com.ulima.incidenciaurbana.model.Asignacion;
 import com.ulima.incidenciaurbana.model.Tecnico;
+import com.ulima.incidenciaurbana.model.TipoFoto;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Map;
+import java.util.stream.Collectors;
 import com.ulima.incidenciaurbana.repository.CuentaRepository;
 import com.ulima.incidenciaurbana.repository.ReporteRepository;
 import com.ulima.incidenciaurbana.repository.UbicacionRepository;
@@ -305,9 +311,29 @@ public class ReporteServiceImpl implements IReporteService {
             dto.setUbicacion(convertirUbicacionADTO(reporte.getUbicacion()));
         }
 
-        // Mapear fotos con base64
+        // Mapear fotos con base64 - filtrar solo las últimas 3 (una de cada tipo:
+        // INICIAL, PROCESO, FINAL)
         if (reporte.getFotos() != null && !reporte.getFotos().isEmpty()) {
-            dto.setFotos(reporte.getFotos().stream()
+            List<Foto> fotosFiltradasYOrdenadas = reporte.getFotos().stream()
+                    // Agrupar por tipo de foto y tomar la más reciente de cada tipo
+                    .collect(Collectors.groupingBy(
+                            Foto::getTipo,
+                            Collectors.maxBy((f1, f2) -> f1.getFechaCarga().compareTo(f2.getFechaCarga()))))
+                    .values()
+                    .stream()
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    // Ordenar por tipo: INICIAL, PROCESO, FINAL
+                    .sorted((f1, f2) -> {
+                        Map<TipoFoto, Integer> orden = Map.of(
+                                TipoFoto.INICIAL, 1,
+                                TipoFoto.PROCESO, 2,
+                                TipoFoto.FINAL, 3);
+                        return orden.getOrDefault(f1.getTipo(), 99).compareTo(orden.getOrDefault(f2.getTipo(), 99));
+                    })
+                    .toList();
+
+            dto.setFotos(fotosFiltradasYOrdenadas.stream()
                     .map(this::convertirFotoADTO)
                     .toList());
         }
@@ -328,6 +354,9 @@ public class ReporteServiceImpl implements IReporteService {
                 dto.setTecnicoNombre(tecnico.getPersona().getNombreCompleto());
             }
         }
+
+        // Mapear contador de rechazos
+        dto.setContadorRechazos(reporte.getContadorRechazos());
 
         return dto;
     }
