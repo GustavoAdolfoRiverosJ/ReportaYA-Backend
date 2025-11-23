@@ -13,8 +13,10 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
 @Repository
-public interface ReporteRepository extends JpaRepository<Reporte, Long> {
+public interface ReporteRepository extends JpaRepository<Reporte, Long>, JpaSpecificationExecutor<Reporte> {
 
         @EntityGraph(attributePaths = { "ubicacion", "cuenta", "cuenta.persona" })
         Page<Reporte> findByCuentaId(Long cuentaId, Pageable pageable);

@@ -39,6 +39,15 @@ public class ReporteController {
         return new ResponseEntity<>(reportes, HttpStatus.OK);
     }
 
+    @GetMapping("/mapa")
+    public ResponseEntity<java.util.List<ReporteDTO>> obtenerReportesMapa(
+            @RequestParam(name = "estado", required = false) EstadoReporte estado,
+            @RequestParam(name = "tipo", required = false) com.ulima.incidenciaurbana.model.TipoProblema tipo,
+            @RequestParam(name = "prioridad", required = false) Prioridad prioridad) {
+        var reportes = reporteService.obtenerReportesMapa(estado, tipo, prioridad);
+        return new ResponseEntity<>(reportes, HttpStatus.OK);
+    }
+
     @GetMapping("/cuenta/{cuentaId}")
     public ResponseEntity<org.springframework.data.domain.Page<ReporteDTO>> obtenerReportesPorCuenta(
             @PathVariable Long cuentaId,

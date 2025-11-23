@@ -2,6 +2,7 @@ package com.ulima.incidenciaurbana.dto;
 
 import com.ulima.incidenciaurbana.model.EstadoReporte;
 import com.ulima.incidenciaurbana.model.Prioridad;
+import com.ulima.incidenciaurbana.model.TipoProblema;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -13,6 +14,7 @@ public class ReporteDTO {
     private String nombreCiudadano;
     private Prioridad prioridad;
     private EstadoReporte estado;
+    private TipoProblema tipoProblema;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
     private UbicacionDTO ubicacion;
@@ -41,7 +43,7 @@ public class ReporteDTO {
     }
 
     public ReporteDTO(Long id, String titulo, String descripcion, Long cuentaId, String nombreCiudadano,
-            Prioridad prioridad, EstadoReporte estado) {
+            Prioridad prioridad, EstadoReporte estado, TipoProblema tipoProblema) {
         this.id = id;
         this.titulo = titulo;
         this.descripcion = descripcion;
@@ -49,6 +51,7 @@ public class ReporteDTO {
         this.nombreCiudadano = nombreCiudadano;
         this.prioridad = prioridad;
         this.estado = estado;
+        this.tipoProblema = tipoProblema;
     }
 
     // Getters and Setters
@@ -106,6 +109,14 @@ public class ReporteDTO {
 
     public void setEstado(EstadoReporte estado) {
         this.estado = estado;
+    }
+
+    public TipoProblema getTipoProblema() {
+        return tipoProblema;
+    }
+
+    public void setTipoProblema(TipoProblema tipoProblema) {
+        this.tipoProblema = tipoProblema;
     }
 
     public LocalDateTime getFechaCreacion() {

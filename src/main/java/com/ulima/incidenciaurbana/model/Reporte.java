@@ -31,6 +31,10 @@ public class Reporte {
     @Column(nullable = false)
     private EstadoReporte estado;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_problema")
+    private TipoProblema tipoProblema = TipoProblema.OTROS;
+
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
@@ -169,6 +173,14 @@ public class Reporte {
 
     public void setEstado(EstadoReporte estado) {
         this.estado = estado;
+    }
+
+    public TipoProblema getTipoProblema() {
+        return tipoProblema;
+    }
+
+    public void setTipoProblema(TipoProblema tipoProblema) {
+        this.tipoProblema = tipoProblema;
     }
 
     public LocalDateTime getFechaCreacion() {

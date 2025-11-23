@@ -225,7 +225,8 @@ public class OperadorServiceImpl implements IOperadorService {
                 reporte.getCuenta() != null ? reporte.getCuenta().getId() : null,
                 nombreCiudadano,
                 reporte.getPrioridad(),
-                reporte.getEstado());
+                reporte.getEstado(),
+                reporte.getTipoProblema());
 
         dto.setFechaCreacion(reporte.getFechaCreacion());
         dto.setFechaActualizacion(reporte.getFechaActualizacion());
