@@ -9,6 +9,7 @@ public class Tecnico extends Cuenta {
 
     public Tecnico() {
         super();
+        setRolMunicipal(RolMunicipal.TECNICO_CAMPO);
     }
 
     @Override
@@ -18,6 +19,7 @@ public class Tecnico extends Cuenta {
 
     public Tecnico(String usuario, String contrasenaHash, Persona persona) {
         super(usuario, contrasenaHash, persona);
+        setRolMunicipal(RolMunicipal.TECNICO_CAMPO);
     }
 
     /*

@@ -28,6 +28,10 @@ public abstract class Cuenta {
     @OneToMany(mappedBy = "cuenta", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reporte> reportes = new ArrayList<>();
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rol_municipal", length = 30)
+    private RolMunicipal rolMunicipal;
+
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
@@ -106,6 +110,14 @@ public abstract class Cuenta {
 
     public void setReportes(List<Reporte> reportes) {
         this.reportes = reportes;
+    }
+
+    public RolMunicipal getRolMunicipal() {
+        return rolMunicipal;
+    }
+
+    public void setRolMunicipal(RolMunicipal rolMunicipal) {
+        this.rolMunicipal = rolMunicipal;
     }
 
     public LocalDateTime getFechaCreacion() {

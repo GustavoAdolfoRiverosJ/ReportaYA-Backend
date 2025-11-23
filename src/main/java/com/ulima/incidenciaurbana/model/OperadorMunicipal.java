@@ -9,10 +9,12 @@ public class OperadorMunicipal extends Cuenta {
 
     public OperadorMunicipal() {
         super();
+        setRolMunicipal(RolMunicipal.OPERADOR_MUNICIPAL);
     }
 
     public OperadorMunicipal(String usuario, String contrasenaHash, Persona persona) {
         super(usuario, contrasenaHash, persona);
+        setRolMunicipal(RolMunicipal.OPERADOR_MUNICIPAL);
     }
 
     public void asignarPrioridad(Reporte reporte, Prioridad prioridad) {

@@ -3,6 +3,8 @@ package com.ulima.incidenciaurbana.factory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.ulima.incidenciaurbana.model.RolMunicipal;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +22,7 @@ public class CuentaFactoryProvider {
     public CuentaFactoryProvider(List<CuentaFactory> factoryList) {
         // Registra automáticamente todas las factories disponibles
         for (CuentaFactory factory : factoryList) {
-            factories.put(factory.getTipoCuenta(), factory);
+            factories.put(factory.getTipoCuenta().toUpperCase(), factory);
         }
     }
     
@@ -35,10 +37,21 @@ public class CuentaFactoryProvider {
         if (factory == null) {
             throw new IllegalArgumentException(
                 "Tipo de cuenta no válido: " + tipoCuenta + 
-                ". Tipos válidos: CIUDADANO, TECNICO, OPERADOR_MUNICIPAL"
+                ". Tipos válidos: CIUDADANO, TECNICO, OPERADOR_MUNICIPAL, ADMIN"
             );
         }
         return factory;
+    }
+
+        /**
+     * Obtiene la factory correspondiente a un RolMunicipal
+     */
+    public CuentaFactory getFactory(RolMunicipal rolMunicipal) {
+        return switch (rolMunicipal) {
+            case TECNICO_CAMPO -> getFactory("TECNICO");
+            case OPERADOR_MUNICIPAL -> getFactory("OPERADOR_MUNICIPAL");
+            case ADMIN -> getFactory("ADMIN");
+        };
     }
     
     /**
