@@ -15,6 +15,7 @@ import com.ulima.incidenciaurbana.repository.ReporteRepository;
 import com.ulima.incidenciaurbana.repository.TecnicoRepository;
 import com.ulima.incidenciaurbana.service.ITecnicoService;
 import com.ulima.incidenciaurbana.service.IReporteService;
+import com.ulima.incidenciaurbana.service.IFirebaseStorageService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,6 +47,7 @@ public class TecnicoServiceImpl implements ITecnicoService {
     private final FotoRepository fotoRepository;
     private final IReporteService reporteService;
     private final TecnicoRepository tecnicoRepository;
+    private final IFirebaseStorageService firebaseStorageService;
     private static final int PAGE_SIZE = 20;
 
     @Autowired
@@ -53,12 +55,14 @@ public class TecnicoServiceImpl implements ITecnicoService {
             ReporteRepository reporteRepository,
             FotoRepository fotoRepository,
             IReporteService reporteService,
-            TecnicoRepository tecnicoRepository) {
+            TecnicoRepository tecnicoRepository,
+            IFirebaseStorageService firebaseStorageService) {
         this.asignacionRepository = asignacionRepository;
         this.reporteRepository = reporteRepository;
         this.fotoRepository = fotoRepository;
         this.reporteService = reporteService;
         this.tecnicoRepository = tecnicoRepository;
+        this.firebaseStorageService = firebaseStorageService;
     }
 
     @Override
@@ -147,7 +151,7 @@ public class TecnicoServiceImpl implements ITecnicoService {
             throw new IllegalArgumentException("Solo el técnico asignado puede completar el reporte");
         }
 
-        // PASO 1: Guardar fotos desde base64
+        // PASO 1: Guardar fotos en Firebase Storage
         try {
             for (CompletarReporteRequest.FotoRequestInline fotoRequest : request.getFotos()) {
                 // Decodificar base64
@@ -155,20 +159,29 @@ public class TecnicoServiceImpl implements ITecnicoService {
 
                 // Determinar extensión
                 String extension = determinarExtensionFoto(decodedBytes);
-                String nombreArchivo = "reporte-" + reporteId + "-" + UUID.randomUUID() + "." + extension;
+                String nombreArchivo = "fotos/reporte-" + reporteId + "-" + fotoRequest.getTipo() + "-"
+                        + UUID.randomUUID() + "." + extension;
 
-                // Crear directorio si no existe
-                Path dirPath = Paths.get("uploads/fotos");
-                Files.createDirectories(dirPath);
-
-                // Guardar archivo
-                Path filePath = dirPath.resolve(nombreArchivo);
-                Files.write(filePath, decodedBytes);
+                // Subir a Firebase Storage
+                String urlFoto;
+                if (firebaseStorageService.isAvailable()) {
+                    // Si Firebase está disponible, subir a la nube
+                    urlFoto = firebaseStorageService.uploadFile(nombreArchivo, decodedBytes);
+                    System.out.println("Foto subida a Firebase Storage: " + nombreArchivo);
+                } else {
+                    // Fallback: guardar localmente si Firebase no está disponible
+                    Path dirPath = Paths.get("uploads/fotos");
+                    Files.createDirectories(dirPath);
+                    Path filePath = dirPath.resolve(nombreArchivo);
+                    Files.write(filePath, decodedBytes);
+                    urlFoto = "uploads/fotos/" + nombreArchivo;
+                    System.out.println("Firebase no disponible. Foto guardada localmente: " + nombreArchivo);
+                }
 
                 // Crear entidad Foto
                 Foto foto = new Foto();
                 foto.setReporte(reporte);
-                foto.setUrl("uploads/fotos/" + nombreArchivo);
+                foto.setUrl(urlFoto);
                 foto.setTipo(TipoFoto.valueOf(fotoRequest.getTipo()));
                 foto.setDescripcion(fotoRequest.getDescripcion());
                 foto.setFechaCarga(LocalDateTime.now());

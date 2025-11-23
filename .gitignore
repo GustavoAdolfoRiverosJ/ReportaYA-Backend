@@ -4,6 +4,14 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# Archivos de fotos locales
+uploads/
+test_results.txt
+
+# Firebase Service Account (credenciales sensibles)
+firebase-service-account.json
+src/main/resources/firebase-service-account.json
+
 ### STS ###
 .apt_generated
 .classpath
