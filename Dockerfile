@@ -4,6 +4,11 @@ WORKDIR /app
 
 # Copiar archivos de configuración de Maven
 COPY pom.xml .
+
+# Descargar dependencias (para aprovechar el caché de Docker)
+RUN mvn dependency:go-offline -B
+
+# Copiar el código fuente
 COPY src ./src
 
 # Compilar la aplicación (skip tests para build más rápido)
@@ -24,9 +29,9 @@ COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
 
 # Variables de entorno - Configuración de Base de Datos
-ENV SPRING_DATASOURCE_URL=jdbc:postgresql://prograweb-202402-1507-db.postgres.database.azure.com:5432/BackendReporteYA
-ENV SPRING_DATASOURCE_USERNAME=postgres
-ENV SPRING_DATASOURCE_PASSWORD=rendimiento456R
+ENV SPRING_DATASOURCE_URL=jdbc:postgresql://ep-soft-poetry-a8g4qwp1-pooler.eastus2.azure.neon.tech/BackendReporte?sslmode=require
+ENV SPRING_DATASOURCE_USERNAME=neondb_owner
+ENV SPRING_DATASOURCE_PASSWORD=npg_MnrKfq09AQSa
 ENV SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
 
 # Variables de entorno - Configuración JPA/Hibernate
