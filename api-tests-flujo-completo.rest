@@ -1,4 +1,4 @@
-@baseUrl = http://localhost:8080/api
+@baseUrl = https://sprint1reportaya.onrender.com/api
 @baseHistorial = http://localhost:8080/historial-estados
 @baseNotificaciones = http://localhost:8080/notificaciones
 @contentType = application/json
