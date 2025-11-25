@@ -1,6 +1,7 @@
 package com.ulima.incidenciaurbana.repository;
 
 import com.ulima.incidenciaurbana.model.Cuenta;
+import com.ulima.incidenciaurbana.model.Persona;
 import com.ulima.incidenciaurbana.model.RolMunicipal;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +14,7 @@ import java.util.Optional;
 public interface CuentaRepository extends JpaRepository<Cuenta, Long> {
     Optional<Cuenta> findByUsuario(String usuario);
     Optional<Cuenta> findByUsuarioAndActivoTrue(String usuario);
+    Optional<Cuenta> findByPersona(Persona persona);
     boolean existsByUsuario(String usuario);
 
     // lista todos los usuarios que tienen algún rol municipal
@@ -20,4 +22,5 @@ public interface CuentaRepository extends JpaRepository<Cuenta, Long> {
     
     // lista por rol específico (OPERADOR_MUNICIPAL, TECNICO_CAMPO, ADMIN)
     List<Cuenta> findByRolMunicipal(RolMunicipal rolMunicipal);
+    Optional<Cuenta> findByPersonaCorreo(String correo);
 }

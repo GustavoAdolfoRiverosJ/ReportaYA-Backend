@@ -21,7 +21,7 @@ public class OperadorMunicipal extends Cuenta {
         if (reporte != null && prioridad != null) {
             reporte.setPrioridad(prioridad);
         }
-    }
+    }   
 
     public Asignacion asignarTecnico(Reporte reporte, Tecnico tecnico) {
         if (reporte == null) {
